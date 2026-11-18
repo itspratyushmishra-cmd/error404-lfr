@@ -1,11 +1,13 @@
 #define TRIG_PIN 8
 #define ECHO_PIN 9
 
-const unsigned long MEASURE_INTERVAL = 25;
-const unsigned long ECHO_TIMEOUT = 30000;
+const unsigned long MEASURE_INTERVAL = 60;
+const unsigned long RISE_TIMEOUT = 10000;
+const unsigned long FALL_TIMEOUT = 30000;
 
 enum EchoState {
   IDLE,
+  TRIGGERING,
   WAIT_RISE,
   WAIT_FALL
 };
@@ -15,9 +17,6 @@ EchoState state = IDLE;
 unsigned long lastMeasurement = 0;
 unsigned long triggerStart = 0;
 unsigned long echoStart = 0;
-unsigned long echoDuration = 0;
-
-float distance = 0.0;
 
 void setup() {
   pinMode(TRIG_PIN, OUTPUT);
@@ -25,53 +24,52 @@ void setup() {
 
   digitalWrite(TRIG_PIN, LOW);
 
-  Serial.begin(115200);
+  Serial3.begin(115200);
 }
 
 void loop() {
   unsigned long nowMs = millis();
   unsigned long nowUs = micros();
 
-  if (state == IDLE &&
-      nowMs - lastMeasurement >= MEASURE_INTERVAL) {
-
-    lastMeasurement = nowMs;
-
-    digitalWrite(TRIG_PIN, HIGH);
-    triggerStart = nowUs;
-    state = WAIT_RISE;
-  }
-
-  if (state == WAIT_RISE &&
-      nowUs - triggerStart >= 10) {
-
-    digitalWrite(TRIG_PIN, LOW);
-    echoStart = nowUs;
-    state = WAIT_FALL;
-  }
-
-  if (state == WAIT_FALL) {
-
-    if (digitalRead(ECHO_PIN) == HIGH) {
-      if (echoStart == triggerStart) {
-        echoStart = nowUs;
+  switch (state) {
+    case IDLE:
+      if (nowMs - lastMeasurement >= MEASURE_INTERVAL) {
+        lastMeasurement = nowMs;
+        digitalWrite(TRIG_PIN, HIGH);
+        triggerStart = nowUs;
+        state = TRIGGERING;
       }
-    }
+      break;
 
-    if (digitalRead(ECHO_PIN) == LOW &&
-        echoStart != triggerStart) {
+    case TRIGGERING:
+      if (nowUs - triggerStart >= 10) {
+        digitalWrite(TRIG_PIN, LOW);
+        state = WAIT_RISE;
+      }
+      break;
 
-      echoDuration = nowUs - echoStart;
-      distance = echoDuration * 0.0343 / 2.0;
+    case WAIT_RISE:
+      if (digitalRead(ECHO_PIN) == HIGH) {
+        echoStart = nowUs;
+        state = WAIT_FALL;
+      } else if (nowUs - triggerStart > RISE_TIMEOUT) {
+        Serial3.println("Timeout");
+        state = IDLE;
+      }
+      break;
 
-      Serial.println(distance, 2);
+    case WAIT_FALL:
+      if (digitalRead(ECHO_PIN) == LOW) {
+        unsigned long echoDuration = nowUs - echoStart;
+        float distance = echoDuration * 0.0343 / 2.0;
 
-      state = IDLE;
-    }
+        Serial3.println(distance, 2);
 
-    if (nowUs - echoStart > ECHO_TIMEOUT) {
-      Serial.println("Timeout");
-      state = IDLE;
-    }
+        state = IDLE;
+      } else if (nowUs - echoStart > FALL_TIMEOUT) {
+        Serial3.println("Timeout");
+        state = IDLE;
+      }
+      break;
   }
 }
