@@ -47,7 +47,7 @@ USER CONFIG
 #define TRACK_MODE 2
 
 // 1 = Auto-start after countdown | 0 = Wait for D12 button press
-#define AUTO_START 0
+#define AUTO_START 1
 
 // 1 = Enable USB Serial diagnostics during setup/calibration (no runtime prints)
 #define DEBUG_SERIAL 1
@@ -105,17 +105,21 @@ const uint16_t TELEMETRY_INTERVAL_MS = 100;   // Minimum time between frame star
 PINS
 ============================================================ */
 
+/* ============================================================
+PINS
+============================================================ */
+
 const uint8_t QTR_PINS[8] = { A0, A1, A2, A3, A4, A5, A6, A7 };
 const uint8_t EMITTER_PIN = 13;
 
 // D4 = Timer0 OC0B, D5 = Timer3 OC3A. Both support analogWrite() out of the box.
 const uint8_t LEFT_PWM = 4;
-const uint8_t LEFT_IN1 = 31;
-const uint8_t LEFT_IN2 = 33;
+const uint8_t LEFT_IN1 = 33;
+const uint8_t LEFT_IN2 = 31;
 
 const uint8_t RIGHT_PWM = 5;
-const uint8_t RIGHT_IN1 = 35;
-const uint8_t RIGHT_IN2 = 37;
+const uint8_t RIGHT_IN1 = 37;
+const uint8_t RIGHT_IN2 = 35;
 
 const uint8_t STBY = 7;
 const uint8_t BTN  = 12;
@@ -133,7 +137,6 @@ const uint8_t IR_RIGHT_PIN = 32;
 // Ultrasonic sensor (reserved for future use)
 const uint8_t US_TRIG = 40;
 const uint8_t US_ECHO = 41;
-
 /* ============================================================
 OBJECTS & VARIABLES
 ============================================================ */
@@ -194,7 +197,7 @@ SPEED PROFILES
 ============================================================ */
 
 // Dynamic speed scaling thresholds (PWM limits)
-const int SPEED_STRAIGHT      = 100; // High speed on straight sections (controlled competition speed)
+const int SPEED_STRAIGHT      = 190; // High speed on straight sections (controlled competition speed)
 // const int SPEED_STRAIGHT      = 255; // High speed on straight sections (controlled competition speed)
 const int SPEED_GENTLE_CURVE  = 90;  // Moderate speed on gentle curves
 const int SPEED_MEDIUM_CURVE  = 80;  // Controlled speed on medium curves
@@ -691,7 +694,7 @@ tlmChar(','); tlmChar(snap.irR);
 tlmStage = 1;
 break;
 
-```
+
 case 1:
   for (uint8_t i = 0; i < 4; i++) tlmCommaInt16((int16_t)snap.q[i]);
   tlmStage = 2;
@@ -723,7 +726,7 @@ default:
   tlmStage = 0;
   break;
 
-```
+
 
 }
 #endif
@@ -784,7 +787,7 @@ uint8_t idx = SENSOR_REVERSED ? (7 - i) : i;
 uint16_t val = sensorValues[idx];
 totalSignal += val;
 
-```
+
 if (val > maxSignal) maxSignal = val;
 if (val >= ACTIVE_THR) {
   mask |= (1 << i);
@@ -794,7 +797,7 @@ if (val >= STRONG_THR) {
   strongCount++;
 }
 
-```
+
 
 }
 
@@ -876,7 +879,7 @@ bool confident = false;
 if (centerSpread <= AUTO_DETECT_MAX_PAIR_SPREAD &&
 edgeSpread <= AUTO_DETECT_MAX_PAIR_SPREAD) {
 
-```
+
 if (centerAverage + AUTO_DETECT_MIN_GAP <= edgeAverage) {
   isWhiteLine = true;
   confident = true;
@@ -885,7 +888,7 @@ if (centerAverage + AUTO_DETECT_MIN_GAP <= edgeAverage) {
   confident = true;
 }
 
-```
+
 
 }
 
@@ -906,7 +909,7 @@ uint16_t brightSprd  = innerMin2 - innerMin1;
 uint16_t darkAvg     = (innerMax1 + innerMax2) / 2;
 uint16_t darkSprd    = innerMax1 - innerMax2;
 
-```
+
 if (brightSprd <= AUTO_DETECT_MAX_PAIR_SPREAD &&
     brightAvg + AUTO_DETECT_MIN_GAP <= edgeAverage) {
   isWhiteLine = true;
@@ -917,7 +920,7 @@ if (brightSprd <= AUTO_DETECT_MAX_PAIR_SPREAD &&
   confident = true;
 }
 
-```
+
 
 }
 
@@ -968,7 +971,7 @@ uint16_t minVal = qtr.calibrationOn.minimum[i];
 uint16_t maxVal = qtr.calibrationOn.maximum[i];
 uint16_t span = (maxVal > minVal) ? (maxVal - minVal) : 0;
 
-```
+
 if (i < 4) leftSpanSum += span;
 else rightSpanSum += span;
 
@@ -1002,7 +1005,7 @@ if (passed) {
   Serial.println(F("WARN: LOW"));
 }
 
-```
+
 
 }
 
@@ -1323,7 +1326,7 @@ stateTimer = millis();
 }
 break;
 
-```
+
 case LP_SEARCH1:
   spin(lostDirection, SEARCH_SPEED);
   if (isLineCentered()) {
@@ -1372,7 +1375,7 @@ case LP_CAPTURE:
   }
   break;
 
-```
+
 
 }
 }
@@ -1542,13 +1545,13 @@ Serial.println(F("[ERROR] Calibration failed!"));
 Serial.println(F("[ERROR] Robot will remain stopped."));
 #endif
 
-```
+
 while (true) {
   setupService();
   delay(1);
 }
 
-```
+
 
 }
 
@@ -1574,13 +1577,13 @@ Serial.println(F("[ERROR] Automatic track detection failed!"));
 Serial.println(F("[ERROR] Robot will remain stopped."));
 #endif
 
-```
+
 while (true) {
   setupService();
   delay(1);
 }
 
-```
+
 
 }
 
@@ -1617,7 +1620,7 @@ case ST_FOLLOW:
 processFollowState();
 break;
 
-```
+
 case ST_JUNC_PROBE:
   driveStraight(PROBE_SPEED);
 
@@ -1718,7 +1721,7 @@ case ST_CHECKER: {
 
 case ST_FINISH_BOX:
 
-```
+
 
 #if STOP_AT_FINISH
 stopMotors();
@@ -1733,7 +1736,7 @@ state = ST_STOP;
 #endif
 break;
 
-```
+
 case ST_LOST:
   runLost();
   break;
@@ -1743,7 +1746,7 @@ default:
   stopMotors();
   break;
 
-```
+
 
 }
 
