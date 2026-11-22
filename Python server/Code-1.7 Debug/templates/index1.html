@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>QTR V3.2 Monitor</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --cyan: #39c5cf;
+      --green: #3fb950;
+      --amber: #d29922;
+      --red: #f85149;
+      --blue: #58a6ff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100vw; height: 100vh; overflow: hidden;
+      background: var(--bg); color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      display: grid; grid-template-rows: 46px 1fr; gap: 10px; padding: 10px;
+    }
+
+    /* Top Bar */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0 14px; font-size: 0.85rem;
+    }
+    .group { display: flex; align-items: center; gap: 10px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red); }
+    .dot.on { background: var(--green); }
+    .pill {
+      padding: 3px 9px; border-radius: 4px; font-weight: bold;
+      background: #21262d; border: 1px solid var(--border); font-size: 0.78rem;
+    }
+    .ok { color: var(--green); border-color: var(--green); background: #14361d; }
+    .warn { color: var(--amber); border-color: var(--amber); background: #3b2a0a; }
+    .err { color: var(--red); border-color: var(--red); background: #3d1518; }
+
+    /* Main 16:9 Split */
+    .main { display: grid; grid-template-columns: 1.35fr 1fr; gap: 10px; min-height: 0; }
+    .left { display: grid; grid-template-rows: 1fr 1.15fr; gap: 10px; min-height: 0; }
+
+    .card {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 6px; padding: 10px 12px; display: flex; flex-direction: column; min-height: 0;
+    }
+    .card-title {
+      font-size: 0.75rem; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.05em; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
+    }
+
+    /* Position Panel */
+    .pos-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+    .pos-big { font-size: 2.2rem; font-weight: bold; color: var(--cyan); line-height: 1; }
+    .pos-err { font-size: 1rem; color: var(--muted); }
+    .pos-track {
+      position: relative; height: 22px; background: #0d1117;
+      border: 1px solid var(--border); border-radius: 11px; margin-bottom: 4px;
+    }
+    .pos-center { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: #484f58; }
+    .pos-marker {
+      position: absolute; top: 2px; width: 16px; height: 16px; border-radius: 50%;
+      background: var(--cyan); transform: translateX(-50%); left: 50%;
+    }
+    .pos-scale {
+      display: flex; justify-content: space-between; font-size: 0.72rem;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    #trace {
+      flex: 1; width: 100%; min-height: 0; background: #090c10;
+      border: 1px solid #262c36; border-radius: 4px; display: block;
+    }
+
+    /* Calibration Table */
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; flex: 1; }
+    th, td { padding: 4px 6px; border-bottom: 1px solid #21262d; text-align: right; }
+    th { color: var(--muted); font-weight: normal; font-size: 0.72rem; }
+    th:first-child, td:first-child { text-align: left; }
+    .span-bar-wrap { width: 100px; height: 8px; background: #0d1117; border-radius: 3px; overflow: hidden; display: inline-block; vertical-align: middle; }
+    .span-bar { height: 100%; background: var(--green); width: 0%; }
+    .span-bar.low { background: var(--red); }
+    .cal-footer {
+      display: flex; justify-content: space-between; margin-top: 6px;
+      padding-top: 6px; border-top: 1px solid var(--border); font-size: 0.78rem; color: var(--muted);
+    }
+
+    /* Raw Output Console */
+    .controls { display: flex; gap: 6px; }
+    .btn {
+      background: #21262d; color: var(--text); border: 1px solid var(--border);
+      border-radius: 4px; padding: 2px 8px; font-size: 0.72rem; cursor: pointer; font-family: inherit;
+    }
+    .btn.on { border-color: var(--blue); color: var(--blue); }
+    #rawBox {
+      flex: 1; min-height: 0; overflow-y: auto; background: #090c10;
+      border: 1px solid #262c36; border-radius: 4px; padding: 8px;
+      font-size: 0.74rem; line-height: 1.35; white-space: pre;
+    }
+    .r-log { color: #e6edf3; }
+    .r-pos { color: #6e7681; }
+    .r-sys { color: var(--amber); }
+    .r-err { color: var(--red); }
+    .r-ok  { color: var(--green); }
+  </style>
+</head>
+<body>
+  <!-- TOP STATUS BAR -->
+  <div class="topbar">
+    <div class="group">
+      <span id="dot" class="dot"></span>
+      <span id="connText">Connecting...</span>
+      <span id="statusPill" class="pill">IDLE</span>
+      <span id="calPill" class="pill">CAL: -</span>
+    </div>
+    <div class="group">
+      <span id="trackPill" class="pill">TRACK: -</span>
+      <span class="pill"><span id="hzVal">0</span> Hz</span>
+    </div>
+  </div>
+
+  <!-- MAIN 16:9 GRID -->
+  <div class="main">
+    <div class="left">
+      <!-- LIVE [POS] + TRACE -->
+      <div class="card">
+        <div class="card-title">
+          <span>Live QTR Position ([POS])</span>
+          <span>0 = Far Left | 3500 = Center | 7000 = Far Right</span>
+        </div>
+        <div class="pos-header">
+          <div class="pos-big" id="posVal">3500</div>
+          <div class="pos-err">Error: <strong id="errVal">0</strong></div>
+        </div>
+        <div class="pos-track">
+          <div class="pos-center"></div>
+          <div id="posMarker" class="pos-marker"></div>
+        </div>
+        <div class="pos-scale"><span>0</span><span>1750</span><span>3500</span><span>5250</span><span>7000</span></div>
+        <canvas id="trace"></canvas>
+      </div>
+
+      <!-- CALIBRATION REPORT TABLE -->
+      <div class="card">
+        <div class="card-title">
+          <span>QTR Sensor Calibration Report</span>
+          <span>Min Required Span: 120</span>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Sensor</th><th>Min</th><th>Max</th><th>Span</th><th>Bar</th><th>Status</th></tr>
+          </thead>
+          <tbody id="calBody"></tbody>
+        </table>
+        <div class="cal-footer">
+          <span>Left Avg (S0–S3): <strong id="avgL">-</strong></span>
+          <span>Right Avg (S4–S7): <strong id="avgR">-</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: BREAK-FIXED RAW OUTPUT -->
+    <div class="card">
+      <div class="card-title">
+        <span>Raw Output (Break-Fixed)</span>
+        <div class="controls">
+          <button id="btnData" class="btn on">Show Data</button>
+          <button id="btnPause" class="btn">Pause</button>
+          <button id="btnClear" class="btn">Clear</button>
+        </div>
+      </div>
+      <div id="rawBox"></div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    // Pre-build 8 calibration table rows
+    const labels = ["S0 (Far L)", "S1", "S2", "S3", "S4", "S5", "S6", "S7 (Far R)"];
+    const calRows = [];
+    for (let i = 0; i < 8; i++) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${labels[i]}</td>
+        <td class="c-min">-</td>
+        <td class="c-max">-</td>
+        <td class="c-span">-</td>
+        <td><span class="span-bar-wrap"><span class="span-bar"></span></span></td>
+        <td class="c-st">-</td>`;
+      $("calBody").appendChild(tr);
+      calRows.push({
+        min: tr.querySelector(".c-min"),
+        max: tr.querySelector(".c-max"),
+        span: tr.querySelector(".c-span"),
+        bar: tr.querySelector(".span-bar"),
+        st: tr.querySelector(".c-st"),
+      });
+    }
+
+    // Trace canvas (rolling history of last 200 positions)
+    const canvas = $("trace");
+    const ctx = canvas.getContext("2d");
+    const history = new Array(200).fill(3500);
+
+    function drawTrace() {
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+      ctx.clearRect(0, 0, w, h);
+
+      // Center reference line (3500)
+      ctx.strokeStyle = "#262c36";
+      ctx.beginPath();
+      ctx.moveTo(0, h / 2);
+      ctx.lineTo(w, h / 2);
+      ctx.stroke();
+
+      // Position trace
+      ctx.strokeStyle = "#39c5cf";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i < history.length; i++) {
+        const x = (i / (history.length - 1)) * w;
+        const y = h - (history[i] / 7000) * h;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    let showData = true, paused = false;
+    $("btnData").onclick = () => {
+      showData = !showData;
+      $("btnData").classList.toggle("on", showData);
+    };
+    $("btnPause").onclick = () => {
+      paused = !paused;
+      $("btnPause").classList.toggle("on", paused);
+      $("btnPause").textContent = paused ? "Resume" : "Pause";
+    };
+    $("btnClear").onclick = () => { $("rawBox").textContent = ""; };
+
+    function appendRaw(text, cls) {
+      if (paused) return;
+      const box = $("rawBox");
+      const div = document.createElement("div");
+      div.className = cls;
+      div.textContent = text;
+      box.appendChild(div);
+      while (box.childElementCount > 200) box.removeChild(box.firstChild);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    const src = new EventSource("/stream");
+    src.onopen = () => { $("dot").className = "dot on"; $("connText").textContent = "Live"; };
+    src.onerror = () => { $("dot").className = "dot"; $("connText").textContent = "Reconnecting..."; };
+
+    src.onmessage = (e) => {
+      const d = JSON.parse(e.data);
+
+      if (d.type === "pos") {
+        $("posVal").textContent = d.pos;
+        const err = d.pos - 3500;
+        $("errVal").textContent = (err > 0 ? "+" : "") + err;
+        $("posMarker").style.left = Math.max(0, Math.min(100, (d.pos / 7000) * 100)) + "%";
+        $("hzVal").textContent = d.hz;
+        $("statusPill").textContent = "RUNNING";
+        $("statusPill").className = "pill ok";
+
+        history.push(d.pos);
+        history.shift();
+        drawTrace();
+        if (showData) appendRaw(d.raw, "r-pos");
+        return;
+      }
+
+      if (d.type === "cal_row") {
+        const r = calRows[d.idx];
+        r.min.textContent = d.min;
+        r.max.textContent = d.max;
+        r.span.textContent = d.span;
+        r.bar.style.width = Math.min(100, (d.span / 1023) * 100) + "%";
+        r.bar.className = "span-bar" + (d.ok ? "" : " low");
+        r.st.textContent = d.ok ? "OK" : "LOW";
+        r.st.style.color = d.ok ? "var(--green)" : "var(--red)";
+        if (showData) appendRaw(d.raw, d.ok ? "r-log" : "r-err");
+        return;
+      }
+
+      if (d.type === "cal_avg") {
+        const el = d.side === "L" ? $("avgL") : $("avgR");
+        el.textContent = `${d.val} (${d.ok ? "OK" : "LOW"})`;
+        el.style.color = d.ok ? "var(--green)" : "var(--red)";
+        if (showData) appendRaw(d.raw, "r-log");
+        return;
+      }
+
+      if (d.type === "cal_result") {
+        $("calPill").textContent = d.ok ? "CAL: OK" : "CAL: LOW";
+        $("calPill").className = "pill " + (d.ok ? "ok" : "err");
+        appendRaw(d.raw, d.ok ? "r-ok" : "r-err");
+        return;
+      }
+
+      if (d.type === "track") {
+        $("trackPill").textContent = "TRACK: " + d.mode;
+        $("trackPill").className = "pill " + (d.mode === "UNCERTAIN" ? "err" : "ok");
+        appendRaw(d.raw, d.mode === "UNCERTAIN" ? "r-err" : "r-ok");
+        return;
+      }
+
+      if (d.type === "status") {
+        $("statusPill").textContent = d.status;
+        $("statusPill").className = "pill " + (d.status === "STOPPED" ? "err" : "warn");
+        appendRaw(d.raw, d.status === "STOPPED" ? "r-err" : "r-sys");
+        return;
+      }
+
+      if (d.type === "sys") {
+        appendRaw(d.raw, "r-sys");
+        return;
+      }
+
+      appendRaw(d.raw, "r-log");
+    };
+
+    window.addEventListener("resize", drawTrace);
+    drawTrace();
+  </script>
+</body>
+</html>
