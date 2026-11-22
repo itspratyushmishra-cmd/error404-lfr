@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>QTR V3.3 Monitor</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --cyan: #39c5cf;
+      --green: #3fb950;
+      --amber: #d29922;
+      --red: #f85149;
+      --blue: #58a6ff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100vw; height: 100vh; overflow: hidden;
+      background: var(--bg); color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      display: grid; grid-template-rows: 44px 1fr 44px; gap: 8px; padding: 8px;
+    }
+
+    /* Top Bar */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0 14px; font-size: 0.84rem;
+    }
+    .group { display: flex; align-items: center; gap: 10px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--red); }
+    .dot.on { background: var(--green); }
+    .pill {
+      padding: 3px 9px; border-radius: 4px; font-weight: bold;
+      background: #21262d; border: 1px solid var(--border); font-size: 0.76rem;
+    }
+    .ok   { color: var(--green); border-color: var(--green); background: #14361d; }
+    .warn { color: var(--amber); border-color: var(--amber); background: #3b2a0a; }
+    .err  { color: var(--red);   border-color: var(--red);   background: #3d1518; }
+    .info { color: var(--cyan);  border-color: var(--cyan);  background: #0f3238; }
+
+    /* Main 16:9 Split */
+    .main { display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px; min-height: 0; }
+    .left { display: grid; grid-template-rows: 1fr 94px 1.05fr; gap: 8px; min-height: 0; }
+
+    .card {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px 11px; display: flex; flex-direction: column; min-height: 0;
+    }
+    .card-title {
+      font-size: 0.72rem; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.05em; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;
+    }
+
+    /* Position Panel */
+    .pos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .pos-big { font-size: 2rem; font-weight: bold; color: var(--cyan); line-height: 1; }
+    .pos-right { display: flex; align-items: center; gap: 10px; }
+    .pos-err { font-size: 0.95rem; color: var(--muted); }
+    .pos-track {
+      position: relative; height: 20px; background: #0d1117;
+      border: 1px solid var(--border); border-radius: 10px; margin-bottom: 3px;
+    }
+    .pos-center { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: #484f58; }
+    .pos-marker {
+      position: absolute; top: 2px; width: 14px; height: 14px; border-radius: 50%;
+      background: var(--cyan); transform: translateX(-50%); left: 50%;
+    }
+    .pos-scale {
+      display: flex; justify-content: space-between; font-size: 0.7rem;
+      color: var(--muted); margin-bottom: 6px;
+    }
+    #trace {
+      flex: 1; width: 100%; min-height: 0; background: #090c10;
+      border: 1px solid #262c36; border-radius: 4px; display: block;
+    }
+
+    /* Peripherals Strip (ENC / IR / US / ACTION) */
+    .periph-row { display: grid; grid-template-columns: 1.05fr 0.95fr 1.05fr 0.95fr; gap: 8px; min-height: 0; }
+    .enc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: 1; align-items: center; }
+    .enc-box {
+      background: #0d1117; border: 1px solid #262c36; border-radius: 4px;
+      padding: 4px 8px; text-align: center;
+    }
+    .enc-lbl { font-size: 0.68rem; color: var(--muted); }
+    .enc-val { font-size: 1.15rem; font-weight: bold; color: var(--blue); font-variant-numeric: tabular-nums; }
+
+    .ir-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: 1; align-items: center; }
+    .ir-badge {
+      padding: 8px 4px; border-radius: 4px; text-align: center; font-weight: bold; font-size: 0.8rem;
+      background: #0d1117; border: 1px solid var(--border); color: var(--muted);
+    }
+    .ir-WHITE { background: #e6edf3; color: #0d1117; border-color: #ffffff; }
+    .ir-BLACK { background: #090c10; color: #c9d1d9; border-color: #6e7681; }
+
+    .us-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+    .us-top { display: flex; justify-content: space-between; align-items: baseline; }
+    .us-val { font-size: 1.25rem; font-weight: bold; color: var(--green); font-variant-numeric: tabular-nums; }
+    .us-val.warn { color: var(--amber); background: none; border: none; }
+    .us-val.err { color: var(--red); background: none; border: none; }
+    .us-val.oor { color: var(--muted); font-size: 0.95rem; }
+    .us-track { height: 10px; background: #0d1117; border: 1px solid #262c36; border-radius: 5px; overflow: hidden; }
+    .us-bar { height: 100%; width: 0%; background: var(--green); }
+
+    .act-box {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      border-radius: 4px; font-size: 1.15rem; font-weight: bold; letter-spacing: 0.04em;
+      background: #0d1117; border: 1px solid var(--border); color: var(--muted);
+    }
+    .act-go   { background: #14361d; border-color: var(--green); color: var(--green); }
+    .act-turn { background: #3b2a0a; border-color: var(--amber); color: var(--amber); }
+    .act-stop { background: #3d1518; border-color: var(--red);   color: var(--red); }
+
+    /* Calibration Table */
+    table { width: 100%; border-collapse: collapse; font-size: 0.77rem; flex: 1; }
+    th, td { padding: 3px 6px; border-bottom: 1px solid #21262d; text-align: right; }
+    th { color: var(--muted); font-weight: normal; font-size: 0.7rem; }
+    th:first-child, td:first-child { text-align: left; }
+    .span-bar-wrap { width: 95px; height: 7px; background: #0d1117; border-radius: 3px; overflow: hidden; display: inline-block; vertical-align: middle; }
+    .span-bar { height: 100%; background: var(--green); width: 0%; }
+    .span-bar.low { background: var(--red); }
+    .cal-footer {
+      display: flex; justify-content: space-between; margin-top: 5px;
+      padding-top: 5px; border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--muted);
+    }
+
+    /* Raw Output Console */
+    .controls { display: flex; gap: 6px; }
+    .btn {
+      background: #21262d; color: var(--text); border: 1px solid var(--border);
+      border-radius: 4px; padding: 3px 9px; font-size: 0.73rem; cursor: pointer; font-family: inherit;
+    }
+    .btn:hover { border-color: #6e7681; }
+    .btn.on { border-color: var(--blue); color: var(--blue); }
+    .btn.live-on { background: #14361d; border-color: var(--green); color: var(--green); font-weight: bold; }
+    .btn.replay-on { background: #3b2a0a; border-color: var(--amber); color: var(--amber); font-weight: bold; }
+
+    #rawBox {
+      flex: 1; min-height: 0; overflow-y: auto; background: #090c10;
+      border: 1px solid #262c36; border-radius: 4px; padding: 8px;
+      font-size: 0.73rem; line-height: 1.35; white-space: pre;
+    }
+    .r-log { color: #e6edf3; }
+    .r-pos { color: #6e7681; }
+    .r-dat { color: #79c0ff; }
+    .r-sys { color: var(--amber); }
+    .r-err { color: var(--red); }
+    .r-ok  { color: var(--green); }
+
+    /* Bottom Replay Bar */
+    .replaybar {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0 12px; font-size: 0.78rem;
+    }
+    #scrubber { flex: 1; accent-color: var(--cyan); cursor: pointer; height: 6px; }
+    .time-info {
+      color: var(--muted); min-width: 195px; text-align: right; font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body>
+  <!-- TOP STATUS BAR -->
+  <div class="topbar">
+    <div class="group">
+      <span id="dot" class="dot"></span>
+      <span id="connText">Connecting...</span>
+      <span id="statusPill" class="pill">IDLE</span>
+      <span id="calPill" class="pill">CAL: -</span>
+    </div>
+    <div class="group">
+      <span id="trackPill" class="pill">TRACK: -</span>
+      <span class="pill"><span id="hzVal">0</span> Hz</span>
+    </div>
+  </div>
+
+  <!-- MAIN 16:9 GRID -->
+  <div class="main">
+    <div class="left">
+      <!-- LIVE [POS] + VIS + TRACE -->
+      <div class="card">
+        <div class="card-title">
+          <span>Live QTR Position ([POS])</span>
+          <span>0 = Far Left | 3500 = Center | 7000 = Far Right</span>
+        </div>
+        <div class="pos-header">
+          <div class="pos-big" id="posVal">3500</div>
+          <div class="pos-right">
+            <span id="visPill" class="pill">VIS: -</span>
+            <div class="pos-err">Error: <strong id="errVal">0</strong></div>
+          </div>
+        </div>
+        <div class="pos-track">
+          <div class="pos-center"></div>
+          <div id="posMarker" class="pos-marker"></div>
+        </div>
+        <div class="pos-scale"><span>0</span><span>1750</span><span>3500</span><span>5250</span><span>7000</span></div>
+        <canvas id="trace"></canvas>
+      </div>
+
+      <!-- PERIPHERALS: ENCODERS, IR, ULTRASONIC, ACTION -->
+      <div class="periph-row">
+        <div class="card">
+          <div class="card-title"><span>Encoders (ENC)</span></div>
+          <div class="enc-grid">
+            <div class="enc-box"><div class="enc-lbl">LEFT</div><div class="enc-val" id="encL">-</div></div>
+            <div class="enc-box"><div class="enc-lbl">RIGHT</div><div class="enc-val" id="encR">-</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span>Background IR</span></div>
+          <div class="ir-grid">
+            <div id="irL" class="ir-badge">L: -</div>
+            <div id="irR" class="ir-badge">R: -</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span>Ultrasonic (US)</span><span style="font-size:0.68rem">0–400 cm</span></div>
+          <div class="us-body">
+            <div class="us-top">
+              <div id="usVal" class="us-val oor">-</div>
+              <span id="usNote" style="font-size:0.7rem;color:var(--muted)">Standby</span>
+            </div>
+            <div class="us-track"><div id="usBar" class="us-bar"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span>Action</span></div>
+          <div id="actBox" class="act-box">-</div>
+        </div>
+      </div>
+
+      <!-- CALIBRATION REPORT TABLE -->
+      <div class="card">
+        <div class="card-title">
+          <span>QTR Sensor Calibration Report</span>
+          <span>Min Required Span: 120</span>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Sensor</th><th>Min</th><th>Max</th><th>Span</th><th>Bar</th><th>Status</th></tr>
+          </thead>
+          <tbody id="calBody"></tbody>
+        </table>
+        <div class="cal-footer">
+          <span>Left Avg (S0–S3): <strong id="avgL">-</strong></span>
+          <span>Right Avg (S4–S7): <strong id="avgR">-</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: CONSOLE (SENSOR LINES EXCLUDED BY DEFAULT) -->
+    <div class="card">
+      <div class="card-title">
+        <span>Logs &amp; Reports</span>
+        <div class="controls">
+          <button id="btnData" class="btn">Show Sensor</button>
+          <button id="btnPause" class="btn">Pause</button>
+          <button id="btnClear" class="btn">Clear</button>
+        </div>
+      </div>
+      <div id="rawBox"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM REPLAY BAR -->
+  <div class="replaybar">
+    <button id="btnPlay" class="btn" title="Play / Pause Replay">▶ Play</button>
+    <button id="btnSpeed" class="btn" title="Playback Speed">1x</button>
+    <input id="scrubber" type="range" min="0" max="0" value="0" disabled>
+    <div class="time-info" id="timeInfo">00:00.0 / 00:00.0 (0)</div>
+    <button id="btnLive" class="btn live-on">● LIVE</button>
+    <button id="btnResetRec" class="btn">Clear Rec</button>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    // Pre-build 8 calibration table rows
+    const labels = ["S0 (Far L)", "S1", "S2", "S3", "S4", "S5", "S6", "S7 (Far R)"];
+    const calRows = [];
+    for (let i = 0; i < 8; i++) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${labels[i]}</td>
+        <td class="c-min">-</td>
+        <td class="c-max">-</td>
+        <td class="c-span">-</td>
+        <td><span class="span-bar-wrap"><span class="span-bar"></span></span></td>
+        <td class="c-st">-</td>`;
+      $("calBody").appendChild(tr);
+      calRows.push({
+        min: tr.querySelector(".c-min"),
+        max: tr.querySelector(".c-max"),
+        span: tr.querySelector(".c-span"),
+        bar: tr.querySelector(".span-bar"),
+        st: tr.querySelector(".c-st"),
+      });
+    }
+
+    // Trace canvas
+    const canvas = $("trace");
+    const ctx = canvas.getContext("2d");
+    let history = new Array(200).fill(3500);
+
+    function drawTrace() {
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+      ctx.clearRect(0, 0, w, h);
+
+      ctx.strokeStyle = "#262c36";
+      ctx.beginPath();
+      ctx.moveTo(0, h / 2);
+      ctx.lineTo(w, h / 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#39c5cf";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i < history.length; i++) {
+        const x = (i / (history.length - 1)) * w;
+        const y = h - (history[i] / 7000) * h;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    // UI Paint Helpers
+    function statePillClass(st) {
+      if (st === "FOLLOW") return "pill ok";
+      if (st === "JPROBE" || st === "JALIGN" || st === "PIVOT" || st === "CALIBRATING" || st === "WAITING") return "pill warn";
+      if (st === "LOST" || st === "STOP" || st === "STOPPED") return "pill err";
+      if (st === "CHECKER" || st === "FINISH") return "pill info";
+      return "pill";
+    }
+
+    function paintVis(vis) {
+      const el = $("visPill");
+      if (vis === null || vis === undefined) {
+        el.textContent = "VIS: -";
+        el.className = "pill";
+      } else if (vis) {
+        el.textContent = "VIS: 1";
+        el.className = "pill ok";
+      } else {
+        el.textContent = "VIS: 0";
+        el.className = "pill err";
+      }
+    }
+
+    function paintIR(l, r) {
+      const elL = $("irL"), elR = $("irR");
+      elL.textContent = l && l !== "-" ? `L: ${l}` : "L: -";
+      elL.className = "ir-badge" + (l && l !== "-" ? ` ir-${l}` : "");
+      elR.textContent = r && r !== "-" ? `R: ${r}` : "R: -";
+      elR.className = "ir-badge" + (r && r !== "-" ? ` ir-${r}` : "");
+    }
+
+    function paintUS(dist) {
+      const valEl = $("usVal"), barEl = $("usBar"), noteEl = $("usNote");
+      if (dist === null) {
+        valEl.textContent = "-";
+        valEl.className = "us-val oor";
+        barEl.style.width = "0%";
+        noteEl.textContent = "Standby";
+      } else if (dist < 0) {
+        valEl.textContent = "Out of range";
+        valEl.className = "us-val oor";
+        barEl.style.width = "0%";
+        noteEl.textContent = "No echo";
+      } else {
+        valEl.textContent = `${dist} cm`;
+        const pct = Math.min(100, (dist / 400) * 100);
+        barEl.style.width = pct + "%";
+        if (dist <= 15) {
+          valEl.className = "us-val err";
+          barEl.style.background = "var(--red)";
+          noteEl.textContent = "CLOSE";
+        } else if (dist <= 35) {
+          valEl.className = "us-val warn";
+          barEl.style.background = "var(--amber)";
+          noteEl.textContent = "NEAR";
+        } else {
+          valEl.className = "us-val";
+          barEl.style.background = "var(--green)";
+          noteEl.textContent = "CLEAR";
+        }
+      }
+    }
+
+    function paintAct(act) {
+      const el = $("actBox");
+      if (!act || act === "-") {
+        el.textContent = "-";
+        el.className = "act-box";
+        return;
+      }
+      el.textContent = act;
+      if (act === "STOP" || act === "STOPPED" || act === "LOST" || act === "BACK") el.className = "act-box act-stop";
+      else if (act === "STRAIGHT" || act === "FORWARD" || act === "FOLLOW") el.className = "act-box act-go";
+      else el.className = "act-box act-turn";
+    }
+
+    // Session History & Replay State
+    const MAX_RECORDED = 60000;
+    const SPEEDS = [1, 0.5, 0.25, 2];
+    let recorded = [];
+    let recStart = null;
+    let isReplay = false;
+    let isPlaying = false;
+    let replayIdx = 0;
+    let speedIdx = 0;
+    let playClock = 0;
+    let lastRaf = 0;
+
+    // Sensor data lines ($POS, $DAT, $ACT) stay out of the console by default
+    let showSensor = false, paused = false;
+
+    function fmtTime(ms) {
+      const s = Math.max(0, ms) / 1000;
+      const m = Math.floor(s / 60);
+      const sec = (s % 60).toFixed(1).padStart(4, "0");
+      return `${String(m).padStart(2, "0")}:${sec}`;
+    }
+
+    function updateReplayBar() {
+      const total = recorded.length;
+      const scrub = $("scrubber");
+      scrub.disabled = total === 0;
+      scrub.max = Math.max(0, total - 1);
+
+      const curIdx = isReplay ? replayIdx : Math.max(0, total - 1);
+      scrub.value = curIdx;
+
+      const curMs = total ? recorded[curIdx].t : 0;
+      const endMs = total ? recorded[total - 1].t : 0;
+      $("timeInfo").textContent = `${fmtTime(curMs)} / ${fmtTime(endMs)} (${total})`;
+
+      $("btnPlay").textContent = isPlaying ? "⏸ Pause" : "▶ Play";
+      $("btnPlay").classList.toggle("replay-on", isPlaying);
+
+      const liveBtn = $("btnLive");
+      if (isReplay) {
+        liveBtn.textContent = "↺ LIVE";
+        liveBtn.className = "btn replay-on";
+      } else {
+        liveBtn.textContent = "● LIVE";
+        liveBtn.className = "btn live-on";
+      }
+    }
+
+    function getRawClassAndVisible(d) {
+      if (d.type === "pos")        return [showSensor, "r-pos"];
+      if (d.type === "dat")        return [showSensor, "r-dat"];
+      if (d.type === "act")        return [showSensor, "r-dat"];
+      if (d.type === "cal_row")    return [true, d.ok ? "r-log" : "r-err"];
+      if (d.type === "cal_avg")    return [true, "r-log"];
+      if (d.type === "cal_result") return [true, d.ok ? "r-ok" : "r-err"];
+      if (d.type === "track")      return [true, d.mode === "UNCERTAIN" ? "r-err" : "r-ok"];
+      if (d.type === "status")     return [true, d.status === "STOPPED" ? "r-err" : "r-sys"];
+      if (d.type === "sys")        return [true, "r-sys"];
+      return [true, "r-log"];
+    }
+
+    function appendRaw(text, cls) {
+      if (paused && !isReplay) return;
+      const box = $("rawBox");
+      const div = document.createElement("div");
+      div.className = cls;
+      div.textContent = text;
+      box.appendChild(div);
+      while (box.childElementCount > 200) box.removeChild(box.firstChild);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function applyEventToDOM(d) {
+      const [vis, cls] = getRawClassAndVisible(d);
+
+      if (d.type === "pos") {
+        $("posVal").textContent = d.pos;
+        const err = d.pos - 3500;
+        $("errVal").textContent = (err > 0 ? "+" : "") + err;
+        $("posMarker").style.left = Math.max(0, Math.min(100, (d.pos / 7000) * 100)) + "%";
+        $("hzVal").textContent = d.hz;
+        paintVis(d.vis);
+        history.push(d.pos);
+        history.shift();
+        drawTrace();
+      } else if (d.type === "dat") {
+        $("encL").textContent = d.encL;
+        $("encR").textContent = d.encR;
+        paintIR(d.irL, d.irR);
+        paintUS(d.us);
+        $("statusPill").textContent = d.st;
+        $("statusPill").className = statePillClass(d.st);
+        paintAct(d.act || d.st);
+      } else if (d.type === "act") {
+        paintAct(d.act);
+      } else if (d.type === "cal_row") {
+        const r = calRows[d.idx];
+        r.min.textContent = d.min;
+        r.max.textContent = d.max;
+        r.span.textContent = d.span;
+        r.bar.style.width = Math.min(100, (d.span / 1023) * 100) + "%";
+        r.bar.className = "span-bar" + (d.ok ? "" : " low");
+        r.st.textContent = d.ok ? "OK" : "LOW";
+        r.st.style.color = d.ok ? "var(--green)" : "var(--red)";
+      } else if (d.type === "cal_avg") {
+        const el = d.side === "L" ? $("avgL") : $("avgR");
+        el.textContent = `${d.val} (${d.ok ? "OK" : "LOW"})`;
+        el.style.color = d.ok ? "var(--green)" : "var(--red)";
+      } else if (d.type === "cal_result") {
+        $("calPill").textContent = d.ok ? "CAL: OK" : "CAL: LOW";
+        $("calPill").className = "pill " + (d.ok ? "ok" : "err");
+      } else if (d.type === "track") {
+        $("trackPill").textContent = "TRACK: " + d.mode;
+        $("trackPill").className = "pill " + (d.mode === "UNCERTAIN" ? "err" : "ok");
+      } else if (d.type === "status") {
+        $("statusPill").textContent = d.status;
+        $("statusPill").className = statePillClass(d.status);
+      }
+
+      if (vis && d.raw) appendRaw(d.raw, cls);
+    }
+
+    // Fast in-memory state reconstruction for lag-free scrubbing
+    function renderSnapshotAt(targetIdx) {
+      let pos = 3500, visState = null, hz = 0, status = "IDLE";
+      let calTxt = "CAL: -", calCls = "pill";
+      let trackTxt = "TRACK: -", trackCls = "pill";
+      let encL = "-", encR = "-", irL = null, irR = null, usDist = null, act = "-";
+      let avgL = null, avgR = null;
+      const rows = new Array(8).fill(null);
+      const posList = [];
+      const rawList = [];
+
+      const end = Math.min(targetIdx, recorded.length - 1);
+      for (let i = 0; i <= end; i++) {
+        const d = recorded[i].d;
+        const [vis, cls] = getRawClassAndVisible(d);
+        if (vis && d.raw) {
+          rawList.push([d.raw, cls]);
+          if (rawList.length > 200) rawList.shift();
+        }
+        if (d.type === "pos") {
+          pos = d.pos; visState = d.vis; hz = d.hz;
+          posList.push(d.pos);
+          if (posList.length > 200) posList.shift();
+        } else if (d.type === "dat") {
+          encL = d.encL; encR = d.encR;
+          irL = d.irL; irR = d.irR;
+          usDist = d.us;
+          status = d.st;
+          act = d.act || d.st;
+        } else if (d.type === "act") {
+          act = d.act;
+        } else if (d.type === "cal_row") {
+          rows[d.idx] = d;
+        } else if (d.type === "cal_avg") {
+          if (d.side === "L") avgL = d; else avgR = d;
+        } else if (d.type === "cal_result") {
+          calTxt = d.ok ? "CAL: OK" : "CAL: LOW";
+          calCls = "pill " + (d.ok ? "ok" : "err");
+        } else if (d.type === "track") {
+          trackTxt = "TRACK: " + d.mode;
+          trackCls = "pill " + (d.mode === "UNCERTAIN" ? "err" : "ok");
+        } else if (d.type === "status") {
+          status = d.status;
+        }
+      }
+
+      $("posVal").textContent = pos;
+      const err = pos - 3500;
+      $("errVal").textContent = (err > 0 ? "+" : "") + err;
+      $("posMarker").style.left = Math.max(0, Math.min(100, (pos / 7000) * 100)) + "%";
+      $("hzVal").textContent = hz;
+      paintVis(visState);
+
+      $("statusPill").textContent = status;
+      $("statusPill").className = statePillClass(status);
+      $("calPill").textContent = calTxt;
+      $("calPill").className = calCls;
+      $("trackPill").textContent = trackTxt;
+      $("trackPill").className = trackCls;
+
+      $("encL").textContent = encL;
+      $("encR").textContent = encR;
+      paintIR(irL, irR);
+      paintUS(usDist);
+      paintAct(act);
+
+      for (let i = 0; i < 8; i++) {
+        const r = calRows[i], d = rows[i];
+        if (d) {
+          r.min.textContent = d.min; r.max.textContent = d.max; r.span.textContent = d.span;
+          r.bar.style.width = Math.min(100, (d.span / 1023) * 100) + "%";
+          r.bar.className = "span-bar" + (d.ok ? "" : " low");
+          r.st.textContent = d.ok ? "OK" : "LOW";
+          r.st.style.color = d.ok ? "var(--green)" : "var(--red)";
+        } else {
+          r.min.textContent = "-"; r.max.textContent = "-"; r.span.textContent = "-";
+          r.bar.style.width = "0%"; r.bar.className = "span-bar";
+          r.st.textContent = "-"; r.st.style.color = "";
+        }
+      }
+
+      $("avgL").textContent = avgL ? `${avgL.val} (${avgL.ok ? "OK" : "LOW"})` : "-";
+      $("avgL").style.color = avgL ? (avgL.ok ? "var(--green)" : "var(--red)") : "";
+      $("avgR").textContent = avgR ? `${avgR.val} (${avgR.ok ? "OK" : "LOW"})` : "-";
+      $("avgR").style.color = avgR ? (avgR.ok ? "var(--green)" : "var(--red)") : "";
+
+      history = new Array(200 - posList.length).fill(3500).concat(posList);
+      drawTrace();
+
+      const box = $("rawBox");
+      const frag = document.createDocumentFragment();
+      for (const [text, cls] of rawList) {
+        const div = document.createElement("div");
+        div.className = cls;
+        div.textContent = text;
+        frag.appendChild(div);
+      }
+      box.textContent = "";
+      box.appendChild(frag);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    // Playback loop
+    function playbackStep(ts) {
+      if (!isPlaying) return;
+      const dt = (ts - lastRaf) * SPEEDS[speedIdx];
+      lastRaf = ts;
+      playClock += dt;
+
+      let advanced = false;
+      while (replayIdx + 1 < recorded.length && recorded[replayIdx + 1].t <= playClock) {
+        replayIdx++;
+        applyEventToDOM(recorded[replayIdx].d);
+        advanced = true;
+      }
+
+      if (advanced) updateReplayBar();
+
+      if (replayIdx >= recorded.length - 1) {
+        isPlaying = false;
+        updateReplayBar();
+        return;
+      }
+      requestAnimationFrame(playbackStep);
+    }
+
+    // Controls
+    $("btnData").onclick = () => {
+      showSensor = !showSensor;
+      $("btnData").classList.toggle("on", showSensor);
+      if (recorded.length) renderSnapshotAt(isReplay ? replayIdx : recorded.length - 1);
+    };
+    $("btnPause").onclick = () => {
+      paused = !paused;
+      $("btnPause").classList.toggle("on", paused);
+      $("btnPause").textContent = paused ? "Resume" : "Pause";
+    };
+    $("btnClear").onclick = () => { $("rawBox").textContent = ""; };
+
+    $("btnPlay").onclick = () => {
+      if (!recorded.length) return;
+      if (isPlaying) {
+        isPlaying = false;
+        updateReplayBar();
+        return;
+      }
+      isReplay = true;
+      if (replayIdx >= recorded.length - 1) {
+        replayIdx = 0;
+        renderSnapshotAt(0);
+      }
+      playClock = recorded[replayIdx].t;
+      lastRaf = performance.now();
+      isPlaying = true;
+      updateReplayBar();
+      requestAnimationFrame(playbackStep);
+    };
+
+    $("btnSpeed").onclick = () => {
+      speedIdx = (speedIdx + 1) % SPEEDS.length;
+      $("btnSpeed").textContent = SPEEDS[speedIdx] + "x";
+    };
+
+    $("scrubber").oninput = (e) => {
+      if (!recorded.length) return;
+      isReplay = true;
+      isPlaying = false;
+      replayIdx = Number(e.target.value);
+      renderSnapshotAt(replayIdx);
+      updateReplayBar();
+    };
+
+    $("btnLive").onclick = () => {
+      isReplay = false;
+      isPlaying = false;
+      if (recorded.length) renderSnapshotAt(recorded.length - 1);
+      updateReplayBar();
+    };
+
+    $("btnResetRec").onclick = () => {
+      recorded = [];
+      recStart = null;
+      isReplay = false;
+      isPlaying = false;
+      replayIdx = 0;
+      renderSnapshotAt(-1);
+      updateReplayBar();
+    };
+
+    // Live SSE Stream
+    const src = new EventSource("/stream");
+    src.onopen = () => { $("dot").className = "dot on"; $("connText").textContent = "Live"; };
+    src.onerror = () => { $("dot").className = "dot"; $("connText").textContent = "Reconnecting..."; };
+
+    src.onmessage = (e) => {
+      const d = JSON.parse(e.data);
+      const now = performance.now();
+      if (recStart === null) recStart = now;
+
+      recorded.push({ t: now - recStart, d });
+      if (recorded.length > MAX_RECORDED) {
+        recorded.shift();
+        if (isReplay && replayIdx > 0) replayIdx--;
+      }
+
+      if (!isReplay) {
+        applyEventToDOM(d);
+      }
+      updateReplayBar();
+    };
+
+    window.addEventListener("resize", drawTrace);
+    drawTrace();
+    updateReplayBar();
+  </script>
+</body>
+</html>
