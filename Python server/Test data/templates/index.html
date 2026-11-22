@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Robot Live Telemetry</title>
+  <style>
+    body { font-family: monospace; background: #111; color: #eee; padding: 20px; max-width: 720px; }
+    .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #f44; margin-right: 6px; }
+    .dot.on { background: #4caf50; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+    .card { background: #1c1c1c; border: 1px solid #333; padding: 14px; border-radius: 6px; }
+    .label { color: #888; font-size: 0.85rem; }
+    .val { font-size: 1.5rem; font-weight: bold; margin-top: 4px; }
+    .qtr-wrap { display: flex; gap: 8px; align-items: flex-end; height: 140px; background: #1c1c1c; border: 1px solid #333; padding: 14px; border-radius: 6px; }
+    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+    .bar { width: 100%; background: #29b6f6; border-radius: 3px 3px 0 0; min-height: 2px; }
+    .bar-val { font-size: 0.75rem; margin-top: 6px; color: #ccc; }
+    #raw { margin-top: 12px; color: #777; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <div><span id="dot" class="dot"></span><span id="status">Connecting...</span></div>
+
+  <div class="grid">
+    <div class="card"><div class="label">IR Left / Right</div><div class="val" id="ir">- / -</div></div>
+    <div class="card"><div class="label">Distance</div><div class="val" id="dist">- cm</div></div>
+    <div class="card"><div class="label">Encoders (L / R)</div><div class="val" id="enc">- / -</div></div>
+  </div>
+
+  <div class="qtr-wrap" id="qtr"></div>
+  <div id="raw"></div>
+
+  <script>
+    const dot = document.getElementById("dot");
+    const statusEl = document.getElementById("status");
+    const irEl = document.getElementById("ir");
+    const distEl = document.getElementById("dist");
+    const encEl = document.getElementById("enc");
+    const qtrEl = document.getElementById("qtr");
+    const rawEl = document.getElementById("raw");
+
+    // Pre-create 8 QTR bar elements once so updates never rebuild DOM nodes
+    const bars = [], vals = [];
+    for (let i = 0; i < 8; i++) {
+      const col = document.createElement("div");
+      col.className = "bar-col";
+      const bar = document.createElement("div");
+      bar.className = "bar";
+      bar.style.height = "0%";
+      const lbl = document.createElement("div");
+      lbl.className = "bar-val";
+      lbl.textContent = "0";
+      col.append(bar, lbl);
+      qtrEl.append(col);
+      bars.push(bar);
+      vals.push(lbl);
+    }
+
+    const src = new EventSource("/stream");
+    src.onopen = () => { dot.className = "dot on"; statusEl.textContent = "Live"; };
+    src.onerror = () => { dot.className = "dot"; statusEl.textContent = "Reconnecting..."; };
+
+    src.onmessage = (e) => {
+      const d = JSON.parse(e.data);
+      if (d.raw) {
+        rawEl.textContent = "Unparsed: " + d.raw;
+        return;
+      }
+      irEl.textContent = `${d.ir_l} / ${d.ir_r}`;
+      distEl.textContent = `${d.dist.toFixed(1)} cm`;
+      encEl.textContent = `${d.enc_l} / ${d.enc_r}`;
+
+      d.qtr.forEach((v, i) => {
+        if (bars[i]) {
+          // Adjust 1023 if your QTR library outputs 0-2500 instead of analog 0-1023
+          bars[i].style.height = Math.min(100, (v / 1023) * 100) + "%";
+          vals[i].textContent = v;
+        }
+      });
+    };
+  </script>
+</body>
+</html>
