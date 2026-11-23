@@ -49,7 +49,8 @@ html, body {
 /* Cards & Buttons */
 .card {
   background: var(--panel); border: 1px solid var(--border);
-  border-radius: 6px; padding: 8px 11px; display: flex; flex-direction: column; min-height: 0;
+  border-radius: 6px; padding: 8px 11px; display: flex; flex-direction: column;
+  min-height: 0; min-width: 0;
 }
 .card-title {
   font-size: 0.72rem; color: var(--muted); text-transform: uppercase;
@@ -71,8 +72,8 @@ html, body {
 .btn.primary:hover { background: #388bfd; }
 
 /* ================= MONITOR PAGE ================= */
-.main { display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px; min-height: 0; }
-.left { display: grid; grid-template-rows: 1fr 94px 1.05fr; gap: 8px; min-height: 0; }
+.main { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 8px; min-height: 0; }
+.left { display: grid; grid-template-rows: 1fr 94px 1.05fr; gap: 8px; min-height: 0; min-width: 0; }
 
 .pos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 .pos-big { font-size: 2rem; font-weight: bold; color: var(--cyan); line-height: 1; }
@@ -144,10 +145,29 @@ th:first-child, td:first-child { text-align: left; }
 }
 
 #rawBox {
-  flex: 1; min-height: 0; overflow-y: auto; background: #090c10;
-  border: 1px solid #262c36; border-radius: 4px; padding: 8px;
-  font-size: 0.73rem; line-height: 1.35; white-space: pre;
+  flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+  background: #090c10; border: 1px solid #262c36; border-radius: 4px; padding: 8px;
+  font-size: 0.73rem; line-height: 1.35;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  scrollbar-width: thin;
+  scrollbar-color: #30363d transparent;
 }
+#rawBox::-webkit-scrollbar {
+  width: 6px;
+}
+#rawBox::-webkit-scrollbar-track {
+  background: transparent;
+}
+#rawBox::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 999px;
+}
+#rawBox::-webkit-scrollbar-thumb:hover {
+  background: #58a6ff;
+}
+
 .r-log { color: #e6edf3; }
 .r-pos { color: #6e7681; }
 .r-dat { color: #79c0ff; }

@@ -1,0 +1,23 @@
+{
+  "Kp": 0.068,
+  "Ki": 0.0008,
+  "Kd": 0.0018,
+  "speedStraight": 190,
+  "speedGentle": 90,
+  "speedMedium": 80,
+  "speedSharp": 70,
+  "speedMinBase": 65,
+  "probeSpeed": 130,
+  "alignSpeed": 120,
+  "pivotSpeed": 160,
+  "searchSpeed": 155,
+  "trackMode": 0,
+  "junctionPolicy": 1,
+  "stopAtFinish": 0,
+  "autoStart": 1,
+  "uturnDir": -1,
+  "leftInvert": 0,
+  "rightInvert": 0,
+  "encLeftInvert": 0,
+  "encRightInvert": 0
+}

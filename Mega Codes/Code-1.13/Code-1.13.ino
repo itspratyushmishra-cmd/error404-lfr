@@ -1237,11 +1237,11 @@ void waitForConfigValues() {
     setupService();
 
     // D12 Button bypass to proceed with default values
-    if (digitalRead(BTN) == LOW) {
-      Serial.println(F("[CFG] Bypassed by D12 button. Using defaults."));
-      Serial3.println(F("[CFG] Bypassed by D12 button. Using defaults."));
-      break;
-    }
+    // if (digitalRead(BTN) == LOW) {
+    //   Serial.println(F("[CFG] Bypassed by D12 button. Using defaults."));
+    //   Serial3.println(F("[CFG] Bypassed by D12 button. Using defaults."));
+    //   break;
+    // }
 
     if (Serial3.available()) {
       String line = Serial3.readStringUntil('\n');
@@ -1369,11 +1369,11 @@ void setup() {
   while (true) {
     setupService();
 
-    if (digitalRead(BTN) == LOW) {
-      Serial.println(F("[WIFI] Bypassed by D12 button."));
-      Serial3.println(F("[WIFI] Bypassed by D12 button."));
-      break;
-    }
+    // if (digitalRead(BTN) == LOW) {
+    //   Serial.println(F("[WIFI] Bypassed by D12 button."));
+    //   Serial3.println(F("[WIFI] Bypassed by D12 button."));
+    //   break;
+    // }
 
     if (Serial3.available()) {
       String msg = Serial3.readStringUntil('\n');
