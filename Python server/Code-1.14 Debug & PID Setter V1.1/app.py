@@ -129,11 +129,11 @@ def auto_send_saved_config(target_conn: socket.socket):
     broadcast({"type": "sys", "raw": f"[AUTO-TX] {packet.strip()}"})
 
 
-def safe_float(val: str):
-    """Parse float safely; keep '?' or '-' if AVR sprintf couldn't format a float."""
+def safe_float(val: str, divisor: float = 1.0, decimals: int = 2):
+    """Parse float safely, optionally scaling by divisor."""
     v = val.strip()
     try:
-        return round(float(v), 2)
+        return round(float(v) / divisor, decimals)
     except ValueError:
         return v if v else "-"
 
@@ -232,9 +232,9 @@ def process_line(raw_line: str):
             "dirR": norm_dir(m.group(8)),
             "pwmR": int(m.group(9)),
             "err": safe_float(m.group(10)),
-            "pTerm": safe_float(m.group(11)),
-            "iTerm": safe_float(m.group(12)),
-            "dTerm": safe_float(m.group(13)),
+            "pTerm": safe_float(m.group(11), 10000.0),
+            "iTerm": safe_float(m.group(12), 10000.0),
+            "dTerm": safe_float(m.group(13), 10000.0),
             "corr": safe_float(m.group(14)),
             "st": m.group(15).upper(),
             "raw": line,
@@ -258,9 +258,9 @@ def process_line(raw_line: str):
                     "dirR": norm_dir(parts[8]),
                     "pwmR": int(parts[9]),
                     "err": safe_float(parts[10]),
-                    "pTerm": safe_float(parts[11]),
-                    "iTerm": safe_float(parts[12]),
-                    "dTerm": safe_float(parts[13]),
+                    "pTerm": safe_float(parts[11], 10000.0),
+                    "iTerm": safe_float(parts[12], 10000.0),
+                    "dTerm": safe_float(parts[13], 10000.0),
                     "corr": safe_float(parts[14]),
                     "st": parts[15].strip().upper(),
                     "raw": line,
