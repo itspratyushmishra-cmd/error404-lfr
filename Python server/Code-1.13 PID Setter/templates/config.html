@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>QTR V3.3 Config</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="group">
+      <div class="nav">
+        <a href="/" class="nav-link">Monitor</a>
+        <a href="/config" class="nav-link active">Config</a>
+      </div>
+      <span id="espDot" class="dot"></span>
+      <span id="espText">Checking ESP...</span>
+    </div>
+    <div class="group">
+      <span id="cfgMsg" class="cfg-msg"></span>
+      <button id="btnReset" class="btn">Reset Defaults</button>
+      <button id="btnSave" class="btn">Save Only</button>
+      <button id="btnSend" class="btn primary">Save &amp; Send to Robot</button>
+    </div>
+  </div>
+
+  <!-- MAIN 3-COLUMN CONFIG GRID (FITS 16:9 NO-SCROLL) -->
+  <div class="cfg-grid">
+    <!-- COLUMN 1: PID GAINS -->
+    <div class="card">
+      <div class="card-title"><span>PID Gains</span><span>Floats</span></div>
+      <div class="form-list">
+        <div class="field">
+          <label for="Kp">Kp (Proportional)</label>
+          <input id="Kp" type="number" step="0.001">
+        </div>
+        <div class="field">
+          <label for="Ki">Ki (Integral)</label>
+          <input id="Ki" type="number" step="0.0001">
+        </div>
+        <div class="field">
+          <label for="Kd">Kd (Derivative)</label>
+          <input id="Kd" type="number" step="0.0001">
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMN 2: SPEED PROFILES -->
+    <div class="card">
+      <div class="card-title"><span>Speed Profiles (PWM 0–255)</span><span>9 Values</span></div>
+      <div class="form-grid-2">
+        <div class="field"><label for="speedStraight">speedStraight</label><input id="speedStraight" type="number" min="0" max="255"></div>
+        <div class="field"><label for="speedGentle">speedGentle</label><input id="speedGentle" type="number" min="0" max="255"></div>
+        <div class="field"><label for="speedMedium">speedMedium</label><input id="speedMedium" type="number" min="0" max="255"></div>
+        <div class="field"><label for="speedSharp">speedSharp</label><input id="speedSharp" type="number" min="0" max="255"></div>
+        <div class="field"><label for="speedMinBase">speedMinBase</label><input id="speedMinBase" type="number" min="0" max="255"></div>
+        <div class="field"><label for="probeSpeed">probeSpeed</label><input id="probeSpeed" type="number" min="0" max="255"></div>
+        <div class="field"><label for="alignSpeed">alignSpeed</label><input id="alignSpeed" type="number" min="0" max="255"></div>
+        <div class="field"><label for="pivotSpeed">pivotSpeed</label><input id="pivotSpeed" type="number" min="0" max="255"></div>
+        <div class="field"><label for="searchSpeed">searchSpeed</label><input id="searchSpeed" type="number" min="0" max="255"></div>
+      </div>
+    </div>
+
+    <!-- COLUMN 3: MODES & HARDWARE FLAGS -->
+    <div class="card">
+      <div class="card-title"><span>Modes &amp; Hardware Flags</span><span>9 Values</span></div>
+      <div class="form-grid-2">
+        <div class="field">
+          <label for="trackMode">trackMode</label>
+          <select id="trackMode">
+            <option value="0">0 - Black on White</option>
+            <option value="1">1 - White on Black</option>
+            <option value="2">2 - Auto Detect</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="junctionPolicy">junctionPolicy</label>
+          <select id="junctionPolicy">
+            <option value="0">0 - Left</option>
+            <option value="1">1 - Right</option>
+            <option value="2">2 - Straight</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="stopAtFinish">stopAtFinish</label>
+          <select id="stopAtFinish">
+            <option value="0">0 - Disabled</option>
+            <option value="1">1 - Stop at Finish</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="autoStart">autoStart</label>
+          <select id="autoStart">
+            <option value="0">0 - Wait D12 Button</option>
+            <option value="1">1 - Auto Start</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="uturnDir">uturnDir</label>
+          <select id="uturnDir">
+            <option value="-1">-1 - Left</option>
+            <option value="1">1 - Right</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="leftInvert">leftInvert</label>
+          <select id="leftInvert">
+            <option value="0">0 - Normal</option>
+            <option value="1">1 - Inverted</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="rightInvert">rightInvert</label>
+          <select id="rightInvert">
+            <option value="0">0 - Normal</option>
+            <option value="1">1 - Inverted</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="encLeftInvert">encLeftInvert</label>
+          <select id="encLeftInvert">
+            <option value="0">0 - Normal</option>
+            <option value="1">1 - Inverted</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="encRightInvert">encRightInvert</label>
+          <select id="encRightInvert">
+            <option value="0">0 - Normal</option>
+            <option value="1">1 - Inverted</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM PACKET PREVIEW BAR -->
+  <div class="preview-bar">
+    <span style="color:var(--muted)">PACKET:</span>
+    <code id="packetPreview" class="preview-code">$CFG,...</code>
+  </div>
+
+  <script src="{{ url_for('static', filename='config.js') }}"></script>
+</body>
+</html>

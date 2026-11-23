@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>QTR V3.3 Monitor</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <!-- TOP STATUS BAR -->
+  <div class="topbar">
+    <div class="group">
+      <div class="nav">
+        <a href="/" class="nav-link active">Monitor</a>
+        <a href="/config" class="nav-link">Config</a>
+      </div>
+      <span id="dot" class="dot"></span>
+      <span id="connText">Connecting...</span>
+      <span id="statusPill" class="pill">IDLE</span>
+      <span id="calPill" class="pill">CAL: -</span>
+    </div>
+    <div class="group">
+      <span id="trackPill" class="pill">TRACK: -</span>
+      <span class="pill"><span id="hzVal">0</span> Hz</span>
+    </div>
+  </div>
+
+  <!-- MAIN 16:9 GRID -->
+  <div class="main">
+    <div class="left">
+      <div class="card">
+        <div class="card-title">
+          <span>Live QTR Position ($POS)</span>
+          <span>0 = Far Left | 3500 = Center | 7000 = Far Right</span>
+        </div>
+        <div class="pos-header">
+          <div class="pos-big" id="posVal">3500</div>
+          <div class="pos-right">
+            <span id="visPill" class="pill">VIS: -</span>
+            <div class="pos-err">Error: <strong id="errVal">0</strong></div>
+          </div>
+        </div>
+        <div class="pos-track">
+          <div class="pos-center"></div>
+          <div id="posMarker" class="pos-marker"></div>
+        </div>
+        <div class="pos-scale"><span>0</span><span>1750</span><span>3500</span><span>5250</span><span>7000</span></div>
+        <canvas id="trace"></canvas>
+      </div>
+
+      <div class="periph-row">
+        <div class="card">
+          <div class="card-title"><span>Encoders (ENC)</span></div>
+          <div class="enc-grid">
+            <div class="enc-box"><div class="enc-lbl">LEFT</div><div class="enc-val" id="encL">-</div></div>
+            <div class="enc-box"><div class="enc-lbl">RIGHT</div><div class="enc-val" id="encR">-</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span>Background IR</span></div>
+          <div class="ir-grid">
+            <div id="irL" class="ir-badge">L: -</div>
+            <div id="irR" class="ir-badge">R: -</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span>Ultrasonic (US)</span><span style="font-size:0.68rem">0–400 cm</span></div>
+          <div class="us-body">
+            <div class="us-top">
+              <div id="usVal" class="us-val oor">-</div>
+              <span id="usNote" style="font-size:0.7rem;color:var(--muted)">Standby</span>
+            </div>
+            <div class="us-track"><div id="usBar" class="us-bar"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span>Action</span></div>
+          <div id="actBox" class="act-box">-</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>QTR Sensor Calibration Report</span>
+          <span>Min Required Span: 120</span>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Sensor</th><th>Min</th><th>Max</th><th>Span</th><th>Bar</th><th>Status</th></tr>
+          </thead>
+          <tbody id="calBody"></tbody>
+        </table>
+        <div class="cal-footer">
+          <span>Left Avg (S0–S3): <strong id="avgL">-</strong></span>
+          <span>Right Avg (S4–S7): <strong id="avgR">-</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>Logs &amp; Reports</span>
+        <div class="controls">
+          <button id="btnData" class="btn">Show Sensor</button>
+          <button id="btnPause" class="btn">Pause</button>
+          <button id="btnClear" class="btn">Clear</button>
+        </div>
+      </div>
+      <div id="rawBox"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM REPLAY BAR -->
+  <div class="replaybar">
+    <button id="btnPlay" class="btn" title="Play / Pause Replay">▶ Play</button>
+    <button id="btnSpeed" class="btn" title="Playback Speed">1x</button>
+    <input id="scrubber" type="range" min="0" max="0" value="0" disabled>
+    <div class="time-info" id="timeInfo">00:00.0 / 00:00.0 (0)</div>
+    <button id="btnLive" class="btn live-on">● LIVE</button>
+    <button id="btnResetRec" class="btn">Clear Rec</button>
+  </div>
+
+  <script src="{{ url_for('static', filename='monitor.js') }}"></script>
+</body>
+</html>
