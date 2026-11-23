@@ -23,8 +23,13 @@ function populateForm(cfg) {
   updatePreview();
 }
 
+const FLOAT_KEYS = new Set(["Kp", "Ki", "Kd", "speedScale"]);
+
 function updatePreview() {
-  const vals = KEYS.map((k) => $(k).value || "0").join(",");
+  const vals = KEYS.map((k) => {
+    const raw = $(k).value || "0";
+    return FLOAT_KEYS.has(k) ? String(Math.round((parseFloat(raw) || 0) * 10000)) : raw;
+  }).join(",");
   $("packetPreview").textContent = `$CFG,${vals}`;
 }
 
