@@ -42,8 +42,8 @@ CONFIG_ORDER = list(DEFAULT_CONFIG.keys())
 CAL_ROW_RE = re.compile(
     r"S([0-7])\b[^|]*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(\d+)\s*\|\s*(OK|WARN:\s*LOW)"
 )
-LEFT_AVG_RE = re.compile(r"Left Side Avg Span.*?:\s*(\d+)\s*\((OK\vert{}LOW)\)")
-RIGHT_AVG_RE = re.compile(r"Right Side Avg Span.*?:\s*(\d+)\s*\((OK\vert{}LOW)\)")
+LEFT_AVG_RE = re.compile(r"Left Side Avg Span.*?:\s*(\d+)\s*\((OK|LOW)\)")
+RIGHT_AVG_RE = re.compile(r"Right Side Avg Span.*?:\s*(\d+)\s*\((OK|LOW)\)")
 ACT_WORDS = {"STOP", "STRAIGHT", "LEFT", "RIGHT", "BACK", "UTURN", "FORWARD", "REVERSE"}
 
 clients: list[queue.Queue] = []
@@ -84,7 +84,6 @@ def save_config(data: dict) -> dict:
 
 def fmt_num(key: str, val) -> str:
     if key in FLOAT_KEYS:
-        # Avoid scientific notation (e.g. 0.0008 stays "0.0008", not "8e-04")
         s = f"{float(val):.6f}".rstrip("0").rstrip(".")
         return s if s else "0"
     return str(int(val))
@@ -93,6 +92,21 @@ def fmt_num(key: str, val) -> str:
 def build_cfg_packet(cfg: dict) -> str:
     values = ",".join(fmt_num(k, cfg[k]) for k in CONFIG_ORDER)
     return f"$CFG,{values}\n"
+
+
+def auto_send_saved_config(target_conn: socket.socket):
+    """Send the saved config 2 seconds after ESP connects, if still connected."""
+    packet = build_cfg_packet(load_config())
+    with conn_lock:
+        if active_conn is not target_conn:
+            return
+        try:
+            target_conn.sendall(packet.encode("utf-8"))
+        except OSError as exc:
+            print(f"[TCP] Auto-send config failed: {exc}")
+            return
+    print(f"[TCP] Auto-sent config: {packet.strip()}")
+    broadcast({"type": "sys", "raw": f"[AUTO-TX] {packet.strip()}"})
 
 
 def norm_ir(val: str) -> str:
@@ -237,6 +251,12 @@ def start_tcp_listener(host="0.0.0.0", port=65432):
             active_conn = conn
         print(f"[TCP] ESP connected: {addr}")
         broadcast({"type": "sys", "connected": True, "raw": f"[SYS] ESP connected ({addr[0]})"})
+
+        # Automatically push saved config 2 seconds after ESP connects
+        timer = threading.Timer(2.0, auto_send_saved_config, args=(conn,))
+        timer.daemon = True
+        timer.start()
+
         buf = ""
         try:
             while True:
@@ -253,6 +273,7 @@ def start_tcp_listener(host="0.0.0.0", port=65432):
                 if len(buf) > 4096:
                     buf = buf[-1024:]
         finally:
+            timer.cancel()
             with conn_lock:
                 if active_conn is conn:
                     active_conn = None
