@@ -1317,12 +1317,12 @@ void waitForConfigValues() {
   while (!received) {
     setupService();
 
-    if (digitalRead(BTN) == LOW) {
-      applySpeedScale();
-      Serial.println(F("[CFG] Bypassed by D12 button. Using defaults."));
-      Serial3.println(F("[CFG] Bypassed by D12 button. Using defaults."));
-      break;
-    }
+    // if (digitalRead(BTN) == LOW) {
+    //   applySpeedScale();
+    //   Serial.println(F("[CFG] Bypassed by D12 button. Using defaults."));
+    //   Serial3.println(F("[CFG] Bypassed by D12 button. Using defaults."));
+    //   break;
+    // }
 
     if (Serial3.available()) {
       String line = Serial3.readStringUntil('\n');
@@ -1331,6 +1331,8 @@ void waitForConfigValues() {
       if (line.length() > 0) {
         Serial.print(F("[CFG] Received: "));
         Serial.println(line);
+        Serial3.print(F("[CFG] Received: "));
+        Serial3.println(line);
 
         String data = line;
         if (data.startsWith(F("$CFG,")))         data = data.substring(5);
@@ -1356,10 +1358,10 @@ void waitForConfigValues() {
 
           if (token.length() > 0) {
             switch (tokenIdx) {
-              case 0: Kp = token.toFloat(); break;
-              case 1: Ki = token.toFloat(); break;
-              case 2: Kd = token.toFloat(); break;
-              case 3: speedScale = token.toFloat(); break;
+              case 0: Kp = token.toInt()/10000.0f; break;
+              case 1: Ki = token.toInt()/10000.0f; break;
+              case 2: Kd = token.toInt()/10000.0f; break;
+              case 3: speedScale = token.toInt()/10000.0f; break;
               case 4: baseSpeedStraight = token.toInt(); break;
               case 5: baseSpeedGentleCurve = token.toInt(); break;
               case 6: baseSpeedMediumCurve = token.toInt(); break;
@@ -1394,6 +1396,13 @@ void waitForConfigValues() {
           Serial.print(F(" Speed Scale=")); Serial.print(speedScale, 2);
           Serial.print(F(" | Scaled Straight=")); Serial.print(speedStraight);
           Serial.print(F(" | Scaled Min=")); Serial.println(speedMinBase);
+          Serial3.println(F("[CFG] Configuration successfully loaded:"));
+          Serial3.print(F("[CFG] PID: Kp=")); Serial3.print(Kp, 6);
+          Serial3.print(F(" Ki=")); Serial3.print(Ki, 6);
+          Serial3.print(F(" Kd=")); Serial3.println(Kd, 6);
+          Serial3.print(F(" Speed Scale=")); Serial3.print(speedScale, 2);
+          Serial3.print(F(" | Scaled Straight=")); Serial3.print(speedStraight);
+          Serial3.print(F(" | Scaled Min=")); Serial3.println(speedMinBase);
           Serial3.println(F("[CFG] CONFIG_OK"));
           break;
         } else {
