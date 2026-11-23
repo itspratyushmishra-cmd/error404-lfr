@@ -104,8 +104,7 @@ def save_config(data: dict) -> dict:
 
 def fmt_num(key: str, val) -> str:
     if key in FLOAT_KEYS:
-        s = f"{float(val):.6f}".rstrip("0").rstrip(".")
-        return s if s else "0"
+        return str(int(round(float(val) * 10000)))
     return str(int(val))
 
 
