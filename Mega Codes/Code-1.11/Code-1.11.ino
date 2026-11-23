@@ -33,9 +33,9 @@ USER CONFIG
 ============================================================ */
 
 // ---------------- TRACK SURFACE COLOR ----------------
-#define TRACK_BLACK_ON_WHITE  0  // Black line on White surface
-#define TRACK_WHITE_ON_BLACK  1  // White line on Black surface
-#define TRACK_AUTO_DETECT     2  // Automatically detect based on contrast at startup
+#define TRACK_BLACK_ON_WHITE 0  // Black line on White surface
+#define TRACK_WHITE_ON_BLACK 1  // White line on Black surface
+#define TRACK_AUTO_DETECT 2     // Automatically detect based on contrast at startup
 
 #define TRACK_MODE 0
 
@@ -49,34 +49,34 @@ USER CONFIG
 #define AUTO_CAL_SWEEP 0
 
 // 1 = Invert sensor array if mounted with A0 on Right and A7 on Left
-#define SENSOR_REVERSED 0
+#define SENSOR_REVERSED 1
 
 // Motor inversion (0 = Normal, 1 = Invert)
-#define LEFT_INVERT  0
+#define LEFT_INVERT 0
 #define RIGHT_INVERT 0
 
 // 1 = Brake and halt when a solid finish square is detected
 #define STOP_AT_FINISH 0
 
 // Junction turn preference policy
-#define POLICY_LEFT      0
-#define POLICY_RIGHT     1
-#define POLICY_STRAIGHT  2
+#define POLICY_LEFT 0
+#define POLICY_RIGHT 1
+#define POLICY_STRAIGHT 2
 
-#define JUNCTION_POLICY POLICY_RIGHT
+#define JUNCTION_POLICY 2
 
 // U-turn / Dead-end direction (-1 = Left, +1 = Right)
 #define UTURN_DIR -1
 
 // ---------------- ENCODERS ----------------
 // Invert direction if forward motion decreases count
-#define ENC_LEFT_INVERT   0
-#define ENC_RIGHT_INVERT  0
+#define ENC_LEFT_INVERT 0
+#define ENC_RIGHT_INVERT 1
 
 // ---------------- BACKGROUND IR SENSORS ----------------
 // 1 = HIGH on black | 0 = LOW on black
-#define IR_LEFT_BLACK_IS_HIGH   1
-#define IR_RIGHT_BLACK_IS_HIGH  1
+#define IR_LEFT_BLACK_IS_HIGH 1
+#define IR_RIGHT_BLACK_IS_HIGH 1
 
 #define IR_PIN_MODE INPUT
 const uint8_t BG_CONFIRM_COUNT = 8;
@@ -98,15 +98,15 @@ const uint8_t RIGHT_IN1 = 37;
 const uint8_t RIGHT_IN2 = 35;
 
 const uint8_t STBY = 7;
-const uint8_t BTN  = 12;
+const uint8_t BTN = 12;
 
 // Encoders (Matched to your test code: L=Pin 3, R=Pin 2)
-const uint8_t ENC_L_A = 3; // INT5
+const uint8_t ENC_L_A = 3;  // INT5
 const uint8_t ENC_L_B = 22;
-const uint8_t ENC_R_A = 2; // INT4
+const uint8_t ENC_R_A = 2;  // INT4
 const uint8_t ENC_R_B = 24;
 
-const uint8_t IR_LEFT_PIN  = 30;
+const uint8_t IR_LEFT_PIN = 30;
 const uint8_t IR_RIGHT_PIN = 32;
 
 const uint8_t US_TRIG = 40;
@@ -130,14 +130,14 @@ float dt = 0.0020f;
 int16_t position = 3500;
 int16_t lastPosition = 3500;
 float filteredPosition = 3500.0f;
-const float POSITION_ALPHA = 0.88f;
+const float POSITION_ALPHA = 0.68f;
 
 // Streaming control: strictly false until calibration & track detection are complete
 bool dataStreamActive = false;
 
 // Scheduling timers for 10 Hz and 5 Hz streams
-uint32_t lastPosSendMs = 0;     // 10 Hz (every 100 ms)
-uint32_t lastAllDataSendMs = 0; // 5 Hz  (every 200 ms)
+uint32_t lastPosSendMs = 0;      // 10 Hz (every 100 ms)
+uint32_t lastAllDataSendMs = 0;  // 5 Hz  (every 200 ms)
 
 int16_t ultrasonicDistanceCm = -1;
 
@@ -167,58 +167,58 @@ int16_t pidOutputOut = 0;
 SPEED PROFILES
 ============================================================ */
 
-const int SPEED_STRAIGHT      = 190;
-const int SPEED_GENTLE_CURVE  = 90;
-const int SPEED_MEDIUM_CURVE  = 80;
-const int SPEED_SHARP_CURVE   = 70;
-const int SPEED_MIN_BASE      = 65;
+const int SPEED_STRAIGHT = 130;
+const int SPEED_GENTLE_CURVE = 80;
+const int SPEED_MEDIUM_CURVE = 70;
+const int SPEED_SHARP_CURVE = 60;
+const int SPEED_MIN_BASE = 55;
 
-const int MOTOR_MAX_FORWARD   = 255;
-const int MOTOR_MAX_REVERSE   = -100;
+const int MOTOR_MAX_FORWARD = 200;
+const int MOTOR_MAX_REVERSE = -100;
 
-const int PROBE_SPEED         = 130;
-const int ALIGN_SPEED         = 120;
-const int PIVOT_SPEED         = 160;
-const int PIVOT_CAPTURE_SPEED = 120;
-const int SEARCH_SPEED        = 155;
-const int UTURN_SPEED         = 160;
+const int PROBE_SPEED = 110;
+const int ALIGN_SPEED = 100;
+const int PIVOT_SPEED = 140;
+const int PIVOT_CAPTURE_SPEED = 100;
+const int SEARCH_SPEED = 165;
+const int UTURN_SPEED = 190;
 
 float currentBaseSpeed = SPEED_MIN_BASE;
-const float ACCEL_RATE = 600.0f;
+const float ACCEL_RATE = 200.0f;
 const float DECEL_RATE = 8000.0f;
 
 /* ============================================================
 THRESHOLDS & TIMINGS
 ============================================================ */
 
-const uint16_t ACTIVE_THR       = 280;
-const uint16_t STRONG_THR       = 620;
-const uint16_t MIN_LINE_SIGNAL  = 160;
-const uint16_t MIN_CAL_SPAN     = 120;
+const uint16_t ACTIVE_THR = 280;
+const uint16_t STRONG_THR = 620;
+const uint16_t MIN_LINE_SIGNAL = 160;
+const uint16_t MIN_CAL_SPAN = 120;
 
-const uint16_t AUTO_DETECT_MIN_GAP         = 250;
+const uint16_t AUTO_DETECT_MIN_GAP = 250;
 const uint16_t AUTO_DETECT_MAX_PAIR_SPREAD = 350;
 
-const uint8_t JUNCTION_CONFIRM  = 8;
-const uint8_t FINISH_CONFIRM    = 9;
-const uint8_t CHECKER_CONFIRM   = 8;
+const uint8_t JUNCTION_CONFIRM = 8;
+const uint8_t FINISH_CONFIRM = 18;
+const uint8_t CHECKER_CONFIRM = 16;
 const uint8_t REACQUIRE_CONFIRM = 4;
 
-const uint16_t PROBE_MS         = 45;
-const uint16_t ALIGN_MS         = 30;
+const uint16_t PROBE_MS = 45;
+const uint16_t ALIGN_MS = 30;
 const uint16_t PIVOT_TIMEOUT_MS = 1400;
-const uint16_t UTURN_TIMEOUT_MS = 2800;
+const uint16_t UTURN_TIMEOUT_MS = 3800;
 const uint16_t JUNC_COOLDOWN_MS = 220;
 
-const int16_t  REACQUIRE_WINDOW = 1100;
+const int16_t REACQUIRE_WINDOW = 800;
 
 /* ============================================================
 SENSOR MASKS
 ============================================================ */
 
-const uint8_t LEFT_MASK     = (1 << 0) | (1 << 1);
-const uint8_t RIGHT_MASK    = (1 << 6) | (1 << 7);
-const uint8_t CENTER_MASK   = (1 << 3) | (1 << 4);
+const uint8_t LEFT_MASK = (1 << 0) | (1 << 1);
+const uint8_t RIGHT_MASK = (1 << 6) | (1 << 7);
+const uint8_t CENTER_MASK = (1 << 3) | (1 << 4);
 const uint8_t STRAIGHT_MASK = (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5);
 
 /* ============================================================
@@ -309,7 +309,7 @@ volatile long leftEncoderCount = 0;
 volatile long rightEncoderCount = 0;
 
 // Background IR
-IrFilter irLeft  = { false, false, false, 0 };
+IrFilter irLeft = { false, false, false, 0 };
 IrFilter irRight = { false, false, false, 0 };
 BgColor bgColor = BG_UNKNOWN;
 
@@ -352,7 +352,7 @@ void setMotor(uint8_t pwmPin, uint8_t in1Pin, uint8_t in2Pin, int speed, bool in
 }
 
 void setMotors(int left, int right) {
-  pwmCmdLeft  = constrain(left,  -255, 255);
+  pwmCmdLeft = constrain(left, -255, 255);
   pwmCmdRight = constrain(right, -255, 255);
   setMotor(LEFT_PWM, LEFT_IN1, LEFT_IN2, left, LEFT_INVERT);
   setMotor(RIGHT_PWM, RIGHT_IN1, RIGHT_IN2, right, RIGHT_INVERT);
@@ -418,10 +418,10 @@ void initEncoders() {
 }
 
 // Atomic copy to prevent 32-bit torn reads
-void readEncoders(long &left, long &right) {
+void readEncoders(long& left, long& right) {
   uint8_t sreg = SREG;
   cli();
-  left  = leftEncoderCount;
+  left = leftEncoderCount;
   right = rightEncoderCount;
   SREG = sreg;
 }
@@ -450,7 +450,7 @@ int16_t readUltrasonicDistance() {
   unsigned long duration = pulseIn(US_ECHO, HIGH, 12000UL);
 
   if (duration == 0) {
-    return -1; // Out of range or clear
+    return -1;  // Out of range or clear
   }
 
   float dist = (float)duration / 58.2f;
@@ -471,7 +471,7 @@ bool irReadBlack(uint8_t pin, bool blackIsHigh) {
   return blackIsHigh ? level : !level;
 }
 
-void irFilterUpdate(IrFilter &f, bool rawBlack) {
+void irFilterUpdate(IrFilter& f, bool rawBlack) {
   if (f.valid && rawBlack == f.stableBlack) {
     f.count = 0;
     return;
@@ -490,7 +490,7 @@ void irFilterUpdate(IrFilter &f, bool rawBlack) {
 }
 
 void updateBackground() {
-  irFilterUpdate(irLeft,  irReadBlack(IR_LEFT_PIN,  IR_LEFT_BLACK_IS_HIGH));
+  irFilterUpdate(irLeft, irReadBlack(IR_LEFT_PIN, IR_LEFT_BLACK_IS_HIGH));
   irFilterUpdate(irRight, irReadBlack(IR_RIGHT_PIN, IR_RIGHT_BLACK_IS_HIGH));
 
   if (irLeft.valid && irRight.valid && irLeft.stableBlack == irRight.stableBlack) {
@@ -504,16 +504,16 @@ STREAMING & DIAGNOSTICS (10 Hz & 5 Hz)
 
 const char* getStateString(State s) {
   switch (s) {
-    case ST_FOLLOW:     return "FOLLOW";
+    case ST_FOLLOW: return "FOLLOW";
     case ST_JUNC_PROBE: return "JPROBE";
     case ST_JUNC_ALIGN: return "JALIGN";
-    case ST_PIVOT:      return "PIVOT";
-    case ST_CHECKER:    return "CHECKER";
+    case ST_PIVOT: return "PIVOT";
+    case ST_CHECKER: return "CHECKER";
     case ST_FINISH_BOX: return "FINISH";
-    case ST_LOST:       return "LOST";
-    case ST_STOP:       return "STOP";
-    case ST_IDLE:       return "IDLE";
-    default:            return "UNKNOWN";
+    case ST_LOST: return "LOST";
+    case ST_STOP: return "STOP";
+    case ST_IDLE: return "IDLE";
+    default: return "UNKNOWN";
   }
 }
 
@@ -689,10 +689,10 @@ bool detectTrackType() {
   uint16_t e1 = sensorValues[7];
 
   uint16_t centerAverage = (c0 + c1) / 2;
-  uint16_t edgeAverage   = (e0 + e1) / 2;
+  uint16_t edgeAverage = (e0 + e1) / 2;
 
   uint16_t centerSpread = (c0 > c1) ? (c0 - c1) : (c1 - c0);
-  uint16_t edgeSpread   = (e0 > e1) ? (e0 - e1) : (e1 - e0);
+  uint16_t edgeSpread = (e0 > e1) ? (e0 - e1) : (e1 - e0);
 
   bool confident = false;
 
@@ -708,25 +708,31 @@ bool detectTrackType() {
 
   if (!confident && edgeSpread <= AUTO_DETECT_MAX_PAIR_SPREAD) {
     uint16_t innerMin1 = 1000, innerMin2 = 1000;
-    uint16_t innerMax1 = 0,    innerMax2 = 0;
+    uint16_t innerMax1 = 0, innerMax2 = 0;
     for (uint8_t i = 2; i <= 5; i++) {
       uint16_t v = sensorValues[i];
-      if (v < innerMin1) { innerMin2 = innerMin1; innerMin1 = v; }
-      else if (v < innerMin2) { innerMin2 = v; }
-      if (v > innerMax1) { innerMax2 = innerMax1; innerMax1 = v; }
-      else if (v > innerMax2) { innerMax2 = v; }
+      if (v < innerMin1) {
+        innerMin2 = innerMin1;
+        innerMin1 = v;
+      } else if (v < innerMin2) {
+        innerMin2 = v;
+      }
+      if (v > innerMax1) {
+        innerMax2 = innerMax1;
+        innerMax1 = v;
+      } else if (v > innerMax2) {
+        innerMax2 = v;
+      }
     }
-    uint16_t brightAvg   = (innerMin1 + innerMin2) / 2;
-    uint16_t brightSprd  = innerMin2 - innerMin1;
-    uint16_t darkAvg     = (innerMax1 + innerMax2) / 2;
-    uint16_t darkSprd    = innerMax1 - innerMax2;
+    uint16_t brightAvg = (innerMin1 + innerMin2) / 2;
+    uint16_t brightSprd = innerMin2 - innerMin1;
+    uint16_t darkAvg = (innerMax1 + innerMax2) / 2;
+    uint16_t darkSprd = innerMax1 - innerMax2;
 
-    if (brightSprd <= AUTO_DETECT_MAX_PAIR_SPREAD &&
-        brightAvg + AUTO_DETECT_MIN_GAP <= edgeAverage) {
+    if (brightSprd <= AUTO_DETECT_MAX_PAIR_SPREAD && brightAvg + AUTO_DETECT_MIN_GAP <= edgeAverage) {
       isWhiteLine = true;
       confident = true;
-    } else if (darkSprd <= AUTO_DETECT_MAX_PAIR_SPREAD &&
-               edgeAverage + AUTO_DETECT_MIN_GAP <= darkAvg) {
+    } else if (darkSprd <= AUTO_DETECT_MAX_PAIR_SPREAD && edgeAverage + AUTO_DETECT_MIN_GAP <= darkAvg) {
       isWhiteLine = false;
       confident = true;
     }
@@ -797,26 +803,51 @@ void printCalibrationReport() {
     Serial3.print(F(" S"));
     Serial.print(i);
     Serial3.print(i);
-    if (i == 0) { Serial.print(F(" (Far L)|   ")); Serial3.print(F(" (Far L)|   ")); }
-    else if (i == 7) { Serial.print(F(" (Far R)|   ")); Serial3.print(F(" (Far R)|   ")); }
-    else { Serial.print(F("        |   ")); Serial3.print(F("        |   ")); }
+    if (i == 0) {
+      Serial.print(F(" (Far L)|   "));
+      Serial3.print(F(" (Far L)|   "));
+    } else if (i == 7) {
+      Serial.print(F(" (Far R)|   "));
+      Serial3.print(F(" (Far R)|   "));
+    } else {
+      Serial.print(F("        |   "));
+      Serial3.print(F("        |   "));
+    }
 
-    if (minVal < 1000) { Serial.print(' '); Serial3.print(' '); }
-    if (minVal < 100)  { Serial.print(' '); Serial3.print(' '); }
+    if (minVal < 1000) {
+      Serial.print(' ');
+      Serial3.print(' ');
+    }
+    if (minVal < 100) {
+      Serial.print(' ');
+      Serial3.print(' ');
+    }
     Serial.print(minVal);
     Serial3.print(minVal);
 
     Serial.print(F("   |   "));
     Serial3.print(F("   |   "));
-    if (maxVal < 1000) { Serial.print(' '); Serial3.print(' '); }
-    if (maxVal < 100)  { Serial.print(' '); Serial3.print(' '); }
+    if (maxVal < 1000) {
+      Serial.print(' ');
+      Serial3.print(' ');
+    }
+    if (maxVal < 100) {
+      Serial.print(' ');
+      Serial3.print(' ');
+    }
     Serial.print(maxVal);
     Serial3.print(maxVal);
 
     Serial.print(F("   |   "));
     Serial3.print(F("   |   "));
-    if (span < 1000) { Serial.print(' '); Serial3.print(' '); }
-    if (span < 100)  { Serial.print(' '); Serial3.print(' '); }
+    if (span < 1000) {
+      Serial.print(' ');
+      Serial3.print(' ');
+    }
+    if (span < 100) {
+      Serial.print(' ');
+      Serial3.print(' ');
+    }
     Serial.print(span);
     Serial3.print(span);
 
@@ -964,7 +995,7 @@ void followPID() {
     float excess = absErr - 1500.0f;
     float boost = excess * excess * PROGRESSIVE_GAIN;
     if (error > 0.0f) pTerm += boost;
-    else              pTerm -= boost;
+    else pTerm -= boost;
   }
 
   float iTerm = Ki * integral;
@@ -973,7 +1004,7 @@ void followPID() {
   float correction = pTerm + iTerm + dTerm;
   correction = constrain(correction, -MAX_CORRECTION, MAX_CORRECTION);
 
-  pidErrorOut  = (int16_t)error;
+  pidErrorOut = (int16_t)error;
   pidOutputOut = (int16_t)correction;
 
   // 5. Dynamic speed scaling based on curve severity
@@ -1006,10 +1037,10 @@ void followPID() {
   }
 
   // 6. Commanded motor outputs
-  int leftSpd  = (int)(currentBaseSpeed + correction);
+  int leftSpd = (int)(currentBaseSpeed + correction);
   int rightSpd = (int)(currentBaseSpeed - correction);
 
-  leftSpd  = constrain(leftSpd,  MOTOR_MAX_REVERSE, MOTOR_MAX_FORWARD);
+  leftSpd = constrain(leftSpd, MOTOR_MAX_REVERSE, MOTOR_MAX_FORWARD);
   rightSpd = constrain(rightSpd, MOTOR_MAX_REVERSE, MOTOR_MAX_FORWARD);
 
   setMotors(leftSpd, rightSpd);
@@ -1023,17 +1054,23 @@ Turn chooseTurn(bool left, bool straight, bool right) {
   Turn pref[3];
 
 #if JUNCTION_POLICY == POLICY_LEFT
-  pref[0] = T_LEFT;     pref[1] = T_STRAIGHT; pref[2] = T_RIGHT;
+  pref[0] = T_LEFT;
+  pref[1] = T_STRAIGHT;
+  pref[2] = T_RIGHT;
 #elif JUNCTION_POLICY == POLICY_RIGHT
-  pref[0] = T_RIGHT;    pref[1] = T_STRAIGHT; pref[2] = T_LEFT;
+  pref[0] = T_RIGHT;
+  pref[1] = T_STRAIGHT;
+  pref[2] = T_LEFT;
 #else
-  pref[0] = T_STRAIGHT; pref[1] = T_LEFT;     pref[2] = T_RIGHT;
+  pref[0] = T_STRAIGHT;
+  pref[1] = T_LEFT;
+  pref[2] = T_RIGHT;
 #endif
 
   for (uint8_t i = 0; i < 3; i++) {
-    if (pref[i] == T_LEFT && left)         return T_LEFT;
+    if (pref[i] == T_LEFT && left) return T_LEFT;
     if (pref[i] == T_STRAIGHT && straight) return T_STRAIGHT;
-    if (pref[i] == T_RIGHT && right)       return T_RIGHT;
+    if (pref[i] == T_RIGHT && right) return T_RIGHT;
   }
 
   return T_BACK;
@@ -1127,7 +1164,7 @@ void runLost() {
 
   switch (lostPhase) {
     case LP_COAST:
-      driveStraight(65);
+      driveStraight(75);
       if (isLineCentered()) {
         resumeFollow();
       } else if (elapsed > 40) {
@@ -1140,7 +1177,7 @@ void runLost() {
       spin(lostDirection, SEARCH_SPEED);
       if (isLineCentered()) {
         beginLostCapture(-lostDirection);
-      } else if (elapsed > 260) {
+      } else if (elapsed > 520) {
         lostPhase = LP_SEARCH2;
         stateTimer = millis();
       }
@@ -1158,7 +1195,7 @@ void runLost() {
 
     case LP_UTURN:
       spin(UTURN_DIR, UTURN_SPEED);
-      if (elapsed > 350 && isLineCentered()) {
+      if (elapsed > 50 && isLineCentered()) {
         beginLostCapture(-UTURN_DIR);
       } else if (elapsed > UTURN_TIMEOUT_MS) {
         state = ST_STOP;
@@ -1204,16 +1241,13 @@ void processFollowState() {
     finishCounter = 0;
   }
 
-  bool leftBranch  = (mask & LEFT_MASK);
+  bool leftBranch = (mask & LEFT_MASK);
   bool rightBranch = (mask & RIGHT_MASK);
   bool centerTrack = (mask & CENTER_MASK);
 
   bool cooldownElapsed = (uint32_t)(millis() - junctionCooldownStart) >= JUNC_COOLDOWN_MS;
 
-  bool branchCandidate = cooldownElapsed &&
-    (((leftBranch || rightBranch) && centerTrack && activeCount >= 4) ||
-     (runs >= 2 && activeCount >= 4) ||
-     (activeCount >= 6));
+  bool branchCandidate = cooldownElapsed && (((leftBranch || rightBranch) && centerTrack && activeCount >= 4) || (runs >= 2 && activeCount >= 4) || (activeCount >= 6));
 
   if (branchCandidate) {
     if (++junctionCounter >= JUNCTION_CONFIRM) {
@@ -1279,7 +1313,7 @@ void waitForButton() {
 }
 
 void setup() {
-  dataStreamActive = false; // Strictly do not stream data during boot/calibration
+  dataStreamActive = false;  // Strictly do not stream data during boot/calibration
 
 #if DEBUG_SERIAL
   Serial.begin(115200);
@@ -1353,33 +1387,36 @@ void setup() {
 
   setupWait(300);
 
+  while (1) {
 #if !AUTO_START
 #if DEBUG_SERIAL
-  Serial.println(F("[USER] Press D12 button to start calibration..."));
-  Serial3.println(F("[USER] Press D12 button to start calibration..."));
+    Serial.println(F("[USER] Press D12 button to start calibration..."));
+    Serial3.println(F("[USER] Press D12 button to start calibration..."));
 #endif
-  waitForButton();
+    waitForButton();
 #else
-  setupWait(800);
+    setupWait(800);
 #endif
 
-  calibrateQTR();
+    calibrateQTR();
 
-  if (calStatus != CAL_OK) {
-    stopMotors();
-    state = ST_STOP;
+    if (calStatus != CAL_OK) {
+      stopMotors();
+      state = ST_STOP;
 #if DEBUG_SERIAL
-    Serial.println(F("[ERROR] Calibration failed!"));
-    Serial3.println(F("[ERROR] Calibration failed!"));
-    Serial.println(F("[ERROR] Robot will remain stopped."));
-    Serial3.println(F("[ERROR] Robot will remain stopped."));
+      Serial.println(F("[ERROR] Calibration failed!"));
+      Serial3.println(F("[ERROR] Calibration failed!"));
+      Serial.println(F("[ERROR] Robot will remain stopped."));
+      Serial3.println(F("[ERROR] Robot will remain stopped."));
 #endif
-    while (true) {
-      setupService();
-      delay(1);
+      while (true) {
+        setupService();
+        delay(1);
+      }
+    } else {
+      break;
     }
   }
-
 #if !AUTO_START
 #if DEBUG_SERIAL
   Serial.println(F("[USER] Place on line & press D12 to detect track and race..."));
@@ -1388,10 +1425,10 @@ void setup() {
   waitForButton();
 #else
 #if DEBUG_SERIAL
-  Serial.println(F("[AUTO] Starting in 2 seconds..."));
-  Serial3.println(F("[AUTO] Starting in 2 seconds..."));
+  Serial.println(F("[AUTO] Starting in 4 seconds..."));
+  Serial3.println(F("[AUTO] Starting in 4 seconds..."));
 #endif
-  setupWait(2000);
+  setupWait(4000);
 #endif
 
   if (!detectTrackType()) {
@@ -1478,69 +1515,71 @@ void loop() {
       }
       break;
 
-    case ST_PIVOT: {
-      uint32_t elapsed = millis() - stateTimer;
-      bool centerCleared = !(mask & CENTER_MASK);
+    case ST_PIVOT:
+      {
+        uint32_t elapsed = millis() - stateTimer;
+        bool centerCleared = !(mask & CENTER_MASK);
 
-      if (pivotPhase == 0) {
-        spin(pivotDir, PIVOT_SPEED);
-        if (centerCleared) {
-          if (++pivotClearCount >= 2) {
+        if (pivotPhase == 0) {
+          spin(pivotDir, PIVOT_SPEED);
+          if (centerCleared) {
+            if (++pivotClearCount >= 2) {
+              pivotClearCount = 0;
+              pivotPhase = 1;
+            }
+          } else {
             pivotClearCount = 0;
-            pivotPhase = 1;
+          }
+        } else if (pivotPhase == 1) {
+          spin(pivotDir, PIVOT_SPEED);
+          if (isLineCentered()) {
+            pivotPhase = 2;
           }
         } else {
-          pivotClearCount = 0;
-        }
-      } else if (pivotPhase == 1) {
-        spin(pivotDir, PIVOT_SPEED);
-        if (isLineCentered()) {
-          pivotPhase = 2;
-        }
-      } else {
-        spin(pivotDir, PIVOT_CAPTURE_SPEED);
-        if (isLineCentered()) {
-          if (++pivotCaptureCount >= REACQUIRE_CONFIRM) {
+          spin(pivotDir, PIVOT_CAPTURE_SPEED);
+          if (isLineCentered()) {
+            if (++pivotCaptureCount >= REACQUIRE_CONFIRM) {
+              pivotCaptureCount = 0;
+              resumeFollow();
+            }
+          } else {
             pivotCaptureCount = 0;
-            resumeFollow();
+          }
+        }
+
+        if (elapsed > PIVOT_TIMEOUT_MS && state == ST_PIVOT) {
+          startLost();
+        }
+        break;
+      }
+
+    case ST_CHECKER:
+      {
+        static uint32_t checkerLostSince = 0;
+
+        if (!lineVisible) {
+          if (checkerLostSince == 0) {
+            checkerLostSince = millis();
+          }
+
+          stopMotors();
+
+          if ((uint32_t)(millis() - checkerLostSince) > 25) {
+            checkerLostSince = 0;
+            startLost();
           }
         } else {
-          pivotCaptureCount = 0;
-        }
-      }
-
-      if (elapsed > PIVOT_TIMEOUT_MS && state == ST_PIVOT) {
-        startLost();
-      }
-      break;
-    }
-
-    case ST_CHECKER: {
-      static uint32_t checkerLostSince = 0;
-
-      if (!lineVisible) {
-        if (checkerLostSince == 0) {
-          checkerLostSince = millis();
-        }
-
-        stopMotors();
-
-        if ((uint32_t)(millis() - checkerLostSince) > 25) {
           checkerLostSince = 0;
-          startLost();
-        }
-      } else {
-        checkerLostSince = 0;
-        followPID();
+          followPID();
 
-        if (runs == 1 && activeCount <= 4) {
-          resumeFollow();
-        } else if (millis() - stateTimer > 1200) {
-          startLost();
+          if (runs == 1 && activeCount <= 4) {
+            resumeFollow();
+          } else if (millis() - stateTimer > 1200) {
+            startLost();
+          }
         }
+        break;
       }
-      break;
-    }
 
     case ST_FINISH_BOX:
 #if STOP_AT_FINISH
