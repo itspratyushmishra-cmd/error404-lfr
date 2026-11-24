@@ -55,7 +55,7 @@ GLOBAL CONFIGURABLE VARIABLES (LOADABLE VIA SERIAL3)
 uint8_t trackMode       = TRACK_BLACK_ON_WHITE; 
 uint8_t autoStart       = 1;                    
 uint8_t autoCalSweep    = 0;                    
-uint8_t sensorReversed  = 0;                    
+uint8_t sensorReversed  = 1;                    
 uint8_t leftInvert      = 0;                    
 uint8_t rightInvert     = 0;
 uint8_t stopAtFinish    = 0;                    
@@ -124,7 +124,7 @@ PINS
 ============================================================ */
 
 const uint8_t QTR_PINS[8] = { A0, A1, A2, A3, A4, A5, A6, A7 };
-const uint8_t EMITTER_PIN = 13;
+const uint8_t EMITTER_PIN = 11;
 
 const uint8_t LEFT_PWM = 4;
 const uint8_t LEFT_IN1 = 33;
@@ -164,7 +164,7 @@ float dt = 0.0020f;
 int16_t position = 3500;
 int16_t lastPosition = 3500;
 float filteredPosition = 3500.0f;
-const float POSITION_ALPHA = 0.88f;
+const float POSITION_ALPHA = 0.68f;
 
 bool dataStreamActive = false;
 
@@ -201,10 +201,10 @@ const uint16_t MIN_CAL_SPAN     = 120;
 const uint16_t AUTO_DETECT_MIN_GAP         = 250;
 const uint16_t AUTO_DETECT_MAX_PAIR_SPREAD = 350;
 
-const uint8_t JUNCTION_CONFIRM  = 12;
-const uint8_t FINISH_CONFIRM    = 35; // Increased to prevent false finish stops
-const uint8_t CHECKER_CONFIRM   = 10;
-const uint8_t REACQUIRE_CONFIRM = 4;
+const uint8_t JUNCTION_CONFIRM  = 48;
+const uint8_t FINISH_CONFIRM    = 70; // Increased to prevent false finish stops
+const uint8_t CHECKER_CONFIRM   = 40;
+const uint8_t REACQUIRE_CONFIRM = 16;
 
 const uint16_t PROBE_MS         = 45;
 const uint16_t ALIGN_MS         = 30;
@@ -522,7 +522,7 @@ void updateUltrasonicNonBlocking() {
         usEchoStart = nowUs;
         usState = US_WAIT_FALL;
       } else if (nowUs - usTrigStart > 4000) {
-        ultrasonicDistanceCm = -1;
+        // Timeout: keep previous ultrasonicDistanceCm
         usState = US_IDLE;
         usTimer = nowMs;
       }
@@ -532,12 +532,17 @@ void updateUltrasonicNonBlocking() {
       if (digitalRead(US_ECHO) == LOW) {
         uint32_t duration = nowUs - usEchoStart;
         float cm = (float)duration / 58.2f;
-        if (cm < 2.0f && cm > 0.0f) cm = 2.0f;
-        ultrasonicDistanceCm = (int16_t)(cm + 0.5f);
+        int16_t dist = (int16_t)(cm + 0.5f);
+
+        // Only update if within valid 0–400 cm range; otherwise keep previous value
+        if (dist >= 0 && dist <= 400) {
+          ultrasonicDistanceCm = dist;
+        }
+
         usState = US_IDLE;
         usTimer = nowMs;
       } else if (nowUs - usEchoStart > 24000) {
-        ultrasonicDistanceCm = -1;
+        // Out of range (>400 cm): keep previous ultrasonicDistanceCm
         usState = US_IDLE;
         usTimer = nowMs;
       }
@@ -1514,7 +1519,7 @@ void setup() {
   } else {
     setupWait(800);
   }
-
+  ST_CALIBRATE:
   calibrateQTR();
 
   if (calStatus != CAL_OK) {
@@ -1523,6 +1528,7 @@ void setup() {
 #if DEBUG_SERIAL
     Serial.println(F("[ERROR] Calibration failed!"));
     Serial3.println(F("[ERROR] Calibration failed!"));
+    goto ST_CALIBRATE;
     Serial.println(F("[ERROR] Robot will remain stopped."));
     Serial3.println(F("[ERROR] Robot will remain stopped."));
 #endif
