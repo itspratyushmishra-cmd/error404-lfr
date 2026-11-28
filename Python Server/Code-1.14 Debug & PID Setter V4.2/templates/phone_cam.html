@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1117">
+  <title>Error 404 — Phone Cam</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --cyan: #39c5cf;
+      --green: #3fb950;
+      --amber: #d29922;
+      --red: #f85149;
+      --blue: #58a6ff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background: #000;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: max(10px, env(safe-area-inset-top)) 12px 10px;
+      background: rgba(13, 17, 23, 0.92);
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+      flex-shrink: 0;
+    }
+
+    .status-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--red);
+      flex-shrink: 0;
+    }
+    .dot.on {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
+
+    .state-txt {
+      font-size: 0.85rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pills {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .pill {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: #21262d;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .pill.ok   { color: var(--green); border-color: var(--green); background: #14361d; }
+    .pill.warn { color: var(--amber); border-color: var(--amber); background: #3b2a0a; }
+
+    .viewport {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: transform 0.15s ease;
+    }
+
+    #errBox {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(61, 21, 24, 0.96);
+      border: 1px solid var(--red);
+      color: #fff;
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      display: none;
+      z-index: 20;
+      word-break: break-word;
+    }
+
+    .dock {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px 12px max(14px, env(safe-area-inset-bottom));
+      background: rgba(13, 17, 23, 0.95);
+      border-top: 1px solid var(--border);
+      z-index: 10;
+      flex-shrink: 0;
+    }
+
+    .dock-row {
+      display: grid;
+      grid-template-columns: 0.9fr 0.95fr 1.35fr 0.9fr;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn, .sel {
+      min-height: 48px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #21262d;
+      color: var(--text);
+      font-size: 0.86rem;
+      font-weight: 700;
+      font-family: inherit;
+      padding: 0 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .sel {
+      appearance: none;
+      -webkit-appearance: none;
+      text-align-last: center;
+    }
+
+    .btn.primary {
+      background: #1f6feb;
+      border-color: #388bfd;
+      color: #ffffff;
+      font-size: 0.92rem;
+    }
+
+    .btn.danger {
+      background: #b91c1c;
+      border-color: var(--red);
+      color: #ffffff;
+      font-size: 0.92rem;
+    }
+
+    .btn.rot-active {
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    .dock-sub {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.74rem;
+      color: var(--muted);
+    }
+
+    .back-link {
+      color: var(--cyan);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    @media (orientation: landscape) and (max-height: 540px) {
+      body { flex-direction: row; }
+      .top-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 170px;
+        background: rgba(13, 17, 23, 0.65);
+        border-bottom: none;
+      }
+      .dock {
+        width: 170px;
+        border-top: none;
+        border-left: 1px solid var(--border);
+        justify-content: center;
+        padding: 12px max(12px, env(safe-area-inset-right)) 12px 12px;
+      }
+      .dock-row { grid-template-columns: 1fr; }
+      .dock-sub {
+        flex-direction: column;
+        gap: 6px;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <div class="status-group">
+      <span id="camDot" class="dot"></span>
+      <span id="camState" class="state-txt">Idle</span>
+    </div>
+    <div class="pills">
+      <span id="recPill" class="pill">SAVED: 0</span>
+      <span class="pill"><span id="fpsVal">0</span> FPS</span>
+    </div>
+  </div>
+
+  <div class="viewport">
+    <video id="video" autoplay playsinline muted></video>
+    <div id="errBox"></div>
+  </div>
+
+  <div class="dock">
+    <div class="dock-row">
+      <button id="btnFlip" class="btn">Flip</button>
+      <button id="btnRotate" class="btn">↻ 0°</button>
+      <button id="btnStart" class="btn primary">Start Cam</button>
+      <select id="resSel" class="sel">
+        <option value="960x540" selected>540p</option>
+        <option value="1280x720">720p</option>
+        <option value="640x360">360p</option>
+      </select>
+    </div>
+    <div class="dock-sub">
+      <span id="hintTxt">Auto-syncs with telemetry clock</span>
+      <a href="/" class="back-link">Monitor →</a>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='phone_cam.js') }}"></script>
+</body>
+</html>
