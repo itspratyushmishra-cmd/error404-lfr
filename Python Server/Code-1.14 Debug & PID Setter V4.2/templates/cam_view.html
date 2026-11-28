@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Error 404 — Live Camera</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="topbar">
+    <div class="group">
+      <div class="nav">
+        <a href="/" class="nav-link">Monitor</a>
+        <a href="/config" class="nav-link">Config</a>
+        <a href="/camera" class="nav-link active">Camera</a>
+        <a href="/replay" class="nav-link">Replay</a>
+        <a href="/phone" class="nav-link">Phone</a>
+      </div>
+      <span id="liveDot" class="dot"></span>
+      <span id="liveTxt">Waiting for Phone...</span>
+    </div>
+    <div class="group">
+      <span id="recBadge" class="pill">DATA FRAMES: 0</span>
+      <span class="pill info"><span id="camFps">0</span> FPS</span>
+    </div>
+  </div>
+
+  <div class="card" style="padding:8px;align-items:center;justify-content:center;position:relative;overflow:hidden;">
+    <img id="mjpeg" src="/api/cam/mjpeg" alt="Live Phone Camera Feed"
+         style="width:100%;height:100%;object-fit:contain;background:#090c10;border-radius:4px;">
+  </div>
+
+  <div class="replaybar" style="justify-content:space-between;">
+    <span style="color:var(--muted);">Phone URL: <strong style="color:var(--cyan)" id="phoneUrl"></strong></span>
+    <span style="color:var(--muted);">Live feed runs at max FPS; snapshots save automatically on every incoming data frame.</span>
+  </div>
+
+  <script>
+    document.getElementById("phoneUrl").textContent = `${window.location.origin}/phone`;
+
+    async function pollCam() {
+      try {
+        const res = await fetch("/api/cam/status");
+        const d = await res.json();
+        document.getElementById("liveDot").className = d.live ? "dot on" : "dot";
+        document.getElementById("liveTxt").textContent = d.live ? "Phone Live (Max FPS)" : "Waiting for Phone...";
+        document.getElementById("camFps").textContent = d.fps;
+        const rb = document.getElementById("recBadge");
+        rb.textContent = `DATA FRAMES: ${d.recorded_frames}`;
+        rb.className = d.live && d.bot_online ? "pill ok" : "pill";
+      } catch {}
+    }
+    pollCam();
+    setInterval(pollCam, 1000);
+  </script>
+</body>
+</html>
